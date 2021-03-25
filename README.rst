@@ -55,6 +55,7 @@ Installation
 To install the package:
 
 .. code-block:: console
+
    $ git clone https://github.com/samuelsimko/healpy-wrapper
    $ cd healpy-wrapper
    $ pip install --user .
