@@ -1,5 +1,4 @@
 #include "ducc0/infra/communication.cc"
-#include "ducc0/infra/string_utils.cc"
 #include "ducc0/infra/system.cc"
 #include "ducc0/infra/threading.cc"
 #include "ducc0/infra/types.cc"
@@ -7,30 +6,32 @@
 #include "ducc0/math/pointing.cc"
 #include "ducc0/math/pointing.h"
 #include "ducc0/math/space_filling.cc"
-#include "ducc0/sharp/sharp.cc"
-#include "ducc0/sharp/sharp_almhelpers.cc"
-#include "ducc0/sharp/sharp_core.cc"
-#include "ducc0/sharp/sharp_geomhelpers.cc"
-#include "ducc0/sharp/sharp_ylmgen.cc"
 
 #include <complex>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <vector>
-
 #include "ducc0/bindings/pybind_utils.h"
-#include "ducc0/infra/error_handling.h"
-#include "ducc0/infra/string_utils.h"
-#include "ducc0/math/constants.h"
-#include "ducc0/sharp/sharp.h"
-#include "ducc0/sharp/sharp_almhelpers.h"
-#include "ducc0/sharp/sharp_geomhelpers.h"
 #include "ducc0/healpix/healpix_base.h"
 #include "ducc0/healpix/healpix_tables.h"
 #include "ducc0/healpix/healpix_base.cc"
 #include "ducc0/healpix/healpix_tables.cc"
 
+#include "ducc0/sharp/sht.h"
+#include "ducc0/sharp/sht.cc"
+#include "ducc0/sharp/sharp.h"
+#include "ducc0/sharp/sharp.cc"
+#include "ducc0/sharp/sharp_geomhelpers.h"
+#include "ducc0/sharp/sharp_geomhelpers.cc"
+#include "ducc0/sharp/sharp_almhelpers.h"
+#include "ducc0/sharp/sharp_almhelpers.cc"
+#include "ducc0/infra/string_utils.h"
+#include "ducc0/infra/string_utils.cc"
+#include "ducc0/infra/error_handling.h"
+#include "ducc0/math/constants.h"
+
 using namespace ducc0;
+using namespace std;
 
 namespace py = pybind11;
 
@@ -39,6 +40,12 @@ using a_d_c = py::array_t<double, py::array::c_style | py::array::forcecast>;
 using a_c_c =
     py::array_t<complex<double>, py::array::c_style | py::array::forcecast>;
 
+unique_ptr<sharp_alm_info> set_triangular_alm_info (int64_t lmax, int64_t mmax)
+  {
+  MR_assert(mmax>=0,"negative mmax");
+  MR_assert(mmax<=lmax,"mmax must not be larger than lmax");
+  return sharp_make_triangular_alm_info(lmax,mmax,1);
+  }
 
 /* Creates a geometry information describing a HEALPix map with an
    Nside parameter `nside`.
@@ -61,6 +68,7 @@ unique_ptr<sharp_geom_info> sharp_make_zbounds_healpix_geom_info (size_t nside, 
     size_t northring = (ring>2*nside) ? 4*nside-ring : ring;
     if (northring < nside){
       cth = cos(2*asin(northring/(sqrt(6.)*nside)));
+      // cth = 1 - (northring*northring)/(3*nside*nside); 
     } else {
       double fact1 = (8.*nside)/npix;
       cth = (2*nside-northring)*fact1;
@@ -112,6 +120,7 @@ int offset(size_t nside, ptrdiff_t stride, a_d &zbounds){
     double fact1 = (8.*nside)/npix;
     if (northring < nside){
       cth = cos(2*asin(northring/(sqrt(6.)*nside)));
+      // cth = 1 - (northring*northring)/(3*nside*nside); 
       nph = 4*northring;
     } else {
       cth = (2*nside-northring)*fact1;
@@ -128,6 +137,7 @@ int offset(size_t nside, ptrdiff_t stride, a_d &zbounds){
     }
   return 0;
   }
+
 
 a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
@@ -152,6 +162,31 @@ a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
   return alm;
 }
 
+
+
+a_d_c map2alm_spin(const a_d_c &map1, const a_d_c &map2, int64_t spin, const int64_t nside, const int64_t lmax,
+                 const int64_t mmax, const int nthreads, a_d &zbounds) {
+
+  // make triangular alm info
+  MR_assert(mmax >= 0, "negative mmax");
+  MR_assert(mmax <= lmax, "mmax must not be larger than lmax");
+  unique_ptr<sharp_alm_info> ainfo =
+      sharp_make_triangular_alm_info(lmax, mmax, 1);
+
+  // set healpix zbounds geometry
+  auto zb = zbounds.mutable_unchecked<1>();
+  MR_assert(nside > 0, "bad nside value");
+  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(vector<size_t>{2,size_t(n_alm)});
+  auto mr1 = map1.unchecked<1>();
+  auto mr2 = map2.unchecked<1>();
+  auto ar = alm.mutable_unchecked<2>();
+
+  sharp_map2alm_spin(spin, &ar(0,0), &ar(1,0), &mr1[0], &mr2[0], *ginfo, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  return alm;
+}
 
 void alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds, a_d_c &map){
@@ -178,6 +213,30 @@ void alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
     return;
   }
 
+void alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
+      const int64_t mmax, const int nthreads, a_d &zbounds, a_d_c &map1, a_d_c &map2){
+  // make triangular alm info
+  MR_assert(mmax >= 0, "negative mmax");
+  MR_assert(mmax <= lmax, "mmax must not be larger than lmax");
+  unique_ptr<sharp_alm_info> ainfo =
+      sharp_make_triangular_alm_info(lmax, mmax, 1);
+
+  // set healpix zbounds geometry
+  auto zb = zbounds.mutable_unchecked<1>();
+  MR_assert(nside > 0, "bad nside value");
+  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
+
+  auto ar=alm.unchecked<2>();
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  MR_assert((ar.shape(0)==2)&&(ar.shape(1)==n_alm),
+    "incorrect size of a_lm array");
+
+  auto mr1=map1.mutable_unchecked<1>();
+  auto mr2=map2.mutable_unchecked<1>();
+  sharp_alm2map_spin(spin, &ar(0,0), &ar(1,0), &mr1[0], &mr2[0], *ginfo, *ainfo, 0, nthreads);
+  return;
+  }
+
 
 /* binders */
 using namespace pybind11;
@@ -187,8 +246,12 @@ PYBIND11_MODULE(healpywrappercpp, m) {
       "Spherical Harmonic Transform functions module";
   my_submodule.def("map2alm", &map2alm, "map"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
-  my_submodule.def("alm2map", &alm2map, "map"_a, "nside"_a, "lmax"_a,
+  my_submodule.def("alm2map", &alm2map, "alm"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a, "map"_a);
+
+  my_submodule.def("alm2map_spin", &alm2map_spin, "alm"_a, "spin"_a, "nside"_a,
+      "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "map1"_a, "map2"_a);
+
   my_submodule.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
   my_submodule.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);
 }

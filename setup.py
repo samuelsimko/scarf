@@ -8,14 +8,17 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 extensions = [
     Pybind11Extension(
         "healpywrappercpp",
-        sources=["src/healpywrapper/healpywrappercpp.cc"],
-        include_dirs=["./", pybind11.get_include(True),
-                      pybind11.get_include(False)],
-        extra_compile_args=["-std=c++17",
-                                   "-O3", "-g0",
-                            "-shared", "-march=native",
-                                   "-Wall"],
-        language='c++'
+        sources=["./src/healpywrapper/healpywrappercpp.cc"],
+        include_dirs=["./ducc/src/", pybind11.get_include(True), pybind11.get_include(False)],
+        extra_compile_args=[
+            "-std=c++17",
+            "-O3",
+            "-g0",
+            "-shared",
+            "-march=native",
+            "-Wall",
+        ],
+        language="c++",
     )
 ]
 
@@ -41,17 +44,3 @@ setuptools.setup(
     ext_modules=extensions,
     python_requires=">=3.6",
 )
-
-
-"""
-    setuptools.Extension(
-        "healpywrappercpp",
-        language="c++",
-        sources=["src/healpywrapper/healpywrappercpp.cc"],
-        include_dirs=[".", pybind11.get_include(True),
-                      pybind11.get_include(False)],
-        extra_compile_args=""-std=c++17
-                                   -O3 -g0 -shared -march=native
-                                   -Wall"",
-    )
-    """

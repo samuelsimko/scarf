@@ -1,0 +1,3 @@
+[submodule "ducc"]
+	path = ducc
+	url = https://gitlab.mpcdf.mpg.de/mtr/ducc/
