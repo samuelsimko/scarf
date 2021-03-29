@@ -240,18 +240,17 @@ void alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int
 
 /* binders */
 using namespace pybind11;
-PYBIND11_MODULE(healpywrappercpp, m) {
-  auto my_submodule = m.def_submodule("sphtfunc");
-  my_submodule.doc() =
+PYBIND11_MODULE(scarfcpp, m) {
+  m.doc() =
       "Spherical Harmonic Transform functions module";
-  my_submodule.def("map2alm", &map2alm, "map"_a, "nside"_a, "lmax"_a,
+  m.def("map2alm", &map2alm, "map"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
-  my_submodule.def("alm2map", &alm2map, "alm"_a, "nside"_a, "lmax"_a,
+  m.def("alm2map", &alm2map, "alm"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a, "map"_a);
 
-  my_submodule.def("alm2map_spin", &alm2map_spin, "alm"_a, "spin"_a, "nside"_a,
+  m.def("alm2map_spin", &alm2map_spin, "alm"_a, "spin"_a, "nside"_a,
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "map1"_a, "map2"_a);
 
-  my_submodule.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
-  my_submodule.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);
+  m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
+  m.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);
 }
