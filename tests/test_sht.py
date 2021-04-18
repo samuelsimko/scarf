@@ -2,15 +2,18 @@ from __future__ import absolute_import, print_function
 
 import healpy as hp
 import scarf
+import warnings
 
 import numpy as np
+
+warnings.filterwarnings(action="ignore", module="healpy")
 
 
 def test_map2alm():
     nside = 128
     lmax = nside
     m = np.random.random(12 * nside ** 2)
-    hp_alm = hp.sphtfunc.map2alm(m, nside, lmax, iter=0)
+    hp_alm = hp.sphtfunc.map2alm(m, nside, lmax, iter=0, verbose=False)
     scarf_alm = scarf.map2alm(m, nside, lmax, lmax, 1, [-1, 1])
     print(np.linalg.norm(hp_alm - scarf_alm))
     assert np.linalg.norm(hp_alm - scarf_alm) < 1e-7
@@ -20,7 +23,7 @@ def test_alm2map():
     nside = 128
     lmax = nside
     alm = np.random.random(hp.Alm.getsize(lmax)).astype(np.complex)
-    hp_map = hp.sphtfunc.alm2map(alm, nside, lmax)
+    hp_map = hp.sphtfunc.alm2map(alm, nside, lmax, verbose=False)
     scarf_map = scarf.alm2map(alm, nside, lmax, lmax, 1, [-1, 1])
     print(np.linalg.norm(hp_map - scarf_map))
     assert np.linalg.norm(hp_map - scarf_map) < 1e-7

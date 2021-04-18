@@ -384,6 +384,7 @@ a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const in
 
 using namespace pybind11;
 PYBIND11_MODULE(scarf, m) {
+  m.attr("__version__") = "0.1.0";
 
   m.doc() = R"pbdoc(
   Spherical harmonics transform library for CMB lensing
