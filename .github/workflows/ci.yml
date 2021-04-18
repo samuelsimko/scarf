@@ -33,6 +33,7 @@ jobs:
           run: pip install numpy healpy pytest pybind11 setuptools
 
         - name: Install scarf 
+          run: git submodule update --init --recursive
           run: python setup.py install --user --prefix=
 
         - name: Run pytest
