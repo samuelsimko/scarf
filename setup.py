@@ -9,7 +9,11 @@ extensions = [
     Pybind11Extension(
         "scarfcpp",
         sources=["./scarf/scarfcpp.cc"],
-        include_dirs=["./ducc/src/", pybind11.get_include(True), pybind11.get_include(False)],
+        include_dirs=[
+            "./ducc/src/",
+            pybind11.get_include(True),
+            pybind11.get_include(False),
+        ],
         extra_compile_args=[
             "-std=c++17",
             "-O3",

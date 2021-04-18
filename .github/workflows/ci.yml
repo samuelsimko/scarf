@@ -1,0 +1,20 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+   lint-black:
+      runs-on: ubuntu-20.04
+      steps:
+        - uses: actions/checkout@v2
+
+        - name: Setup Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.9
+
+        - name: Install Python dependencies
+          run: pip install black==20.8b1
+
+        - name: Check Python code formatting
+          run: black --check setup.py tests scarf docs

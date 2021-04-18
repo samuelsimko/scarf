@@ -1,9 +1,11 @@
 import numpy as np
-import scarfcpp
+from scarfcpp import Geometry, healpix_geometry
+
+__version__ = "0.1.0"
 
 
 def map2alm(map, nside, lmax, mmax, nthreads, zbounds):
-    offset = scarfcpp.sphtfunc.offset(nside, 1, zbounds)
+    offset = scarfcpp.offset(nside, 1, zbounds)
     npix = scarfcpp.get_npix(nside, 1, zbounds)
     return scarfcpp.map2alm(
         map[offset : offset + npix], nside, lmax, mmax, nthreads, zbounds
