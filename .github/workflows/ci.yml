@@ -30,7 +30,7 @@ jobs:
             python-version: 3.9
 
         - name: Install Python dependencies
-          run: pip install numpy healpy
+          run: pip install numpy healpy pytest
 
         - name: Run pytest
           run: python -m pytest tests
