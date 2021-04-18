@@ -18,3 +18,14 @@ jobs:
 
         - name: Check Python code formatting
           run: black --check setup.py tests scarf docs
+
+python-tests:
+        runs-on: ubuntu-20.04
+        steps:
+          - uses: actions/checkout@v2
+
+          - name: Install Python dependencies
+            run: pip install numpy healpy
+
+          - name: Run pytest
+            run: python -m pytest tests

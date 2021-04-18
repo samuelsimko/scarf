@@ -145,96 +145,6 @@ int offset(size_t nside, ptrdiff_t stride, a_d &zbounds){
   }
 
 
-a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
-                 const int64_t mmax, const int nthreads, a_d &zbounds) {
-
-  unique_ptr<sharp_alm_info> ainfo =
-    set_triangular_alm_info (lmax, mmax);
-
-  // set healpix zbounds geometry
-  auto zb = zbounds.mutable_unchecked<1>();
-  MR_assert(nside > 0, "bad nside value");
-  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
-
-  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
-  a_c_c alm(n_alm);
-  auto mr = map.unchecked<1>();
-  auto ar = alm.mutable_unchecked<1>();
-
-  sharp_map2alm(&ar[0], &mr[0], *ginfo, *ainfo, SHARP_USE_WEIGHTS, nthreads);
-  return alm;
-}
-
-
-
-a_d_c map2alm_spin(const a_d_c &map1, const a_d_c &map2, int64_t spin, const int64_t nside, const int64_t lmax,
-                 const int64_t mmax, const int nthreads, a_d &zbounds) {
-
-  // make triangular alm info
-  unique_ptr<sharp_alm_info> ainfo =
-    set_triangular_alm_info (lmax, mmax);
-
-  // set healpix zbounds geometry
-  auto zb = zbounds.mutable_unchecked<1>();
-  MR_assert(nside > 0, "bad nside value");
-  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
-
-  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
-  a_c_c alm(vector<size_t>{2,size_t(n_alm)});
-  auto mr1 = map1.unchecked<1>();
-  auto mr2 = map2.unchecked<1>();
-  auto ar = alm.mutable_unchecked<2>();
-
-  sharp_map2alm_spin(spin, &ar(0,0), &ar(1,0), &mr1[0], &mr2[0], *ginfo, *ainfo, SHARP_USE_WEIGHTS, nthreads);
-  return alm;
-}
-
-void alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
-      const int64_t mmax, const int nthreads, a_d &zbounds, a_d_c &map){
-
-    // make triangular alm info
-    unique_ptr<sharp_alm_info> ainfo =
-      set_triangular_alm_info (lmax, mmax);
-
-    // set healpix zbounds geometry
-    auto zb = zbounds.mutable_unchecked<1>();
-    MR_assert(nside > 0, "bad nside value");
-    unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
-
-    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
-    MR_assert (alm.size()==n_alm,
-        "incorrect size of a_lm array"); 
-
-    auto mr=map.mutable_unchecked<1>();
-    auto ar=alm.unchecked<1>();
-
-    sharp_alm2map(&ar[0], &mr[0], *ginfo, *ainfo, 0, nthreads);
-    return;
-  }
-
-void alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
-      const int64_t mmax, const int nthreads, a_d &zbounds, a_d_c &map1, a_d_c &map2){
-  // make triangular alm info
-  unique_ptr<sharp_alm_info> ainfo =
-    set_triangular_alm_info (lmax, mmax);
-
-  // set healpix zbounds geometry
-  auto zb = zbounds.mutable_unchecked<1>();
-  MR_assert(nside > 0, "bad nside value");
-  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
-
-  auto ar=alm.unchecked<2>();
-  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
-  MR_assert((ar.shape(0)==2)&&(ar.shape(1)==n_alm),
-    "incorrect size of a_lm array");
-
-  auto mr1=map1.mutable_unchecked<1>();
-  auto mr2=map2.mutable_unchecked<1>();
-  sharp_alm2map_spin(spin, &ar(0,0), &ar(1,0), &mr1[0], &mr2[0], *ginfo, *ainfo, 0, nthreads);
-  return;
-  }
-
-
 
 using namespace ducc0::detail_sharp;
 
@@ -439,10 +349,41 @@ a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int6
   return map;
   }
 
+a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
+                 const int64_t mmax, const int nthreads, a_d &zbounds) {
+
+    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
+    return map2alm_ginfo(&ginfo, map, lmax, mmax, nthreads, zbounds);
+
+}
+
+a_d_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t nside, const int64_t lmax,
+                 const int64_t mmax, const int nthreads, a_d &zbounds) {
+
+    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
+    return map2alm_spin_ginfo(&ginfo, map, spin, lmax, mmax, nthreads, zbounds);
+}
+
+a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
+      const int64_t mmax, const int nthreads, a_d &zbounds){
+
+    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
+    return alm2map_ginfo(&ginfo, alm, lmax, mmax, nthreads, zbounds);
+  }
+
+
+a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
+      const int64_t mmax, const int nthreads, a_d &zbounds){
+
+  sharp_standard_geom_info ginfo = make_healpix_geom_info(nside, 1);
+  return alm2map_spin_ginfo(&ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
+  }
+
+
 /* binders */
 
 using namespace pybind11;
-PYBIND11_MODULE(scarfcpp, m) {
+PYBIND11_MODULE(scarf, m) {
 
   m.doc() = R"pbdoc(
   Spherical harmonics transform library for CMB lensing
@@ -453,13 +394,19 @@ PYBIND11_MODULE(scarfcpp, m) {
   )pbdoc", "map"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
+
+  m.def("map2alm_spin", &map2alm_spin, R"pbdoc(
+  Computes alms from a given map
+  )pbdoc", "map"_a, "spin"_a, "nside"_a, "lmax"_a,
+                   "mmax"_a, "nthreads"_a, "zbounds"_a);
+
   m.def("alm2map", &alm2map, R"pbdoc(
     Computes a Healpix map given the alm.
   )pbdoc", "alm"_a, "nside"_a, "lmax"_a,
-                   "mmax"_a, "nthreads"_a, "zbounds"_a, "map"_a);
+                   "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("alm2map_spin", &alm2map_spin, "alm"_a, "spin"_a, "nside"_a,
-      "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "map1"_a, "map2"_a);
+      "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
   m.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);

@@ -7,8 +7,8 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 
 extensions = [
     Pybind11Extension(
-        "scarfcpp",
-        sources=["./scarf/scarfcpp.cc"],
+        "scarf",
+        sources=["./scarf/scarf.cc"],
         include_dirs=[
             "./ducc/src/",
             pybind11.get_include(True),
