@@ -19,7 +19,7 @@ jobs:
         - name: Check Python code formatting
           run: black --check setup.py tests scarf docs
 
-    pytest:
+    python-tests:
       runs-on: ubuntu-20.04
       steps:
         - uses: actions/checkout@v2
@@ -30,7 +30,10 @@ jobs:
             python-version: 3.9
 
         - name: Install Python dependencies
-          run: pip install numpy healpy pytest
+          run: pip install numpy healpy pytest pybind11 setuptools
+
+        - name: Install scarf 
+          run: python setup.py install --user --prefix=
 
         - name: Run pytest
           run: python -m pytest tests
