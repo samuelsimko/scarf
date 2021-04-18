@@ -395,7 +395,7 @@ a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int
     int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
     MR_assert (alm.size()==n_alm, "incorrect size of a_lm array"); 
 
-    int64_t npix = 0;
+    size_t npix = 0;
     for (size_t i = 0; i < ginfo->nrings(); ++i){;
       npix += ginfo->nph(i);
     }
@@ -480,7 +480,7 @@ PYBIND11_MODULE(scarfcpp, m) {
     .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
-    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
+    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("healpix_geometry", &make_healpix_geom_info, R"pbdoc(
   Creates a HEALPix geometry given the nside.
