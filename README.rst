@@ -36,6 +36,8 @@ like healpy and follows a similar naming convention.
 For instance, to calculate the alm from a given map, call the `map2alm()` function,
 
 .. code-block:: python
+
+   :linenos:
    import scarf
    import numpy
    nside_mwe = 1
@@ -58,12 +60,17 @@ A basic pytest is currently executed upon each pull-request and push, for each b
 To manually test the code with the existing test, install pytest,
 
 .. code-block:: console
-   pip install -U pytest
+
+$ pip install -U pytest
 
 and execute pytest in the root directory of the repo,
+
 .. code-block:: console
-   pytest
+
+$ pytest
 
 or,
+
 .. code-block:: console
-   python3 -m pytest tests
+
+$ python3 -m pytest tests
