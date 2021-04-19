@@ -66,4 +66,4 @@ and execute pytest in the root directory of the repo,
 
 or,
 .. code-block:: console
-   python3 -m pytest
+   python3 -m pytest tests
