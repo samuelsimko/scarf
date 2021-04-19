@@ -2,6 +2,11 @@
 Scarf
 ==================
 
+.. image:: _static/scarflogo.jpg
+   :target: _static/scarflogo.jpg
+   :alt: Scarf logo
+
+
 About
 -----
 
