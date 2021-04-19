@@ -7,7 +7,7 @@ About
 
 Scarf is a Spherical Harmonic Transform library designed for CMB lensing applications.
 
-The repository uses `DUCC <https://gitlab.mpcdf.mpg.de/mtr/ducc>`_ for the calculations.
+The repository uses `DUCC <https://github.com/mreineck/ducc>`_ for the calculations.
 
 Installation
 ------------
@@ -61,13 +61,13 @@ Testing
 --------
 
 A basic pytest is currently executed upon each pull-request and push, for each branch.
-To manually test the code with the existing test directory `tests`, install pytest,
+To manually test the code with the existing test directory **tests**, install ``pytest``,
 
 .. code-block:: console
 
    $ pip install -U pytest
 
-and execute pytest in the root directory of the repo,
+and execute in the root directory of the repository,
 
 .. code-block:: console
 
