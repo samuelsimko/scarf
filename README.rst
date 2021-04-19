@@ -52,11 +52,16 @@ For instance, to calculate the alm from a given map, call the `map2alm()` functi
        zbounds = [-1, 1])
 
 
+`zbounds` is the parameter controlling the latitude of the rings which are transformed.
+`zbound = sin(latitude)`, where latitude goes from -90 to 90 degree.
+Setting `zbounds` to `[0,1]` thus restricts the `map2alm()` function to the northern hemisphere.
+
+
 Testing
 --------
 
 A basic pytest is currently executed upon each pull-request and push, for each branch.
-To manually test the code with the existing test, install pytest,
+To manually test the code with the existing test directory `tests`, install pytest,
 
 .. code-block:: console
 
@@ -66,7 +71,7 @@ and execute pytest in the root directory of the repo,
 
 .. code-block:: console
 
-   $ pytest
+   $ pytest tests
 
 or,
 
