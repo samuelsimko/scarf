@@ -30,10 +30,10 @@ Features
 Minimal Working Example
 -----------------------
 
-Import `scarf` (and `numpy`, for the following example). It provides almost all spherical harmonic transforms
+Import ``scarf`` (and ``numpy``, for the following example). It provides almost all spherical harmonic transforms
 like healpy and follows a similar naming convention.
 
-For instance, to calculate the alm from a given map, call the `map2alm()` function,
+For instance, to calculate the alm from a given map, call the ``map2alm()`` function,
 
 .. code-block:: python
 
@@ -52,9 +52,9 @@ For instance, to calculate the alm from a given map, call the `map2alm()` functi
        zbounds = [-1, 1])
 
 
-`zbounds` is the parameter controlling the latitude of the rings which are transformed.
-`zbound = sin(latitude)`, where latitude goes from -90 to 90 degree.
-Setting `zbounds` to `[0,1]` thus restricts the `map2alm()` function to the northern hemisphere.
+``zbounds`` is the parameter controlling the latitude of the rings which are transformed.
+``zbound = sin(latitude)``, where latitude goes from -90 to 90 degree.
+Setting ``zbounds = [0,1]`` thus restricts ``map2alm()`` to the northern hemisphere.
 
 
 Testing
