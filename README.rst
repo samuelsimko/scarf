@@ -38,7 +38,7 @@ For instance, to calculate the alm from a given map, call the ``map2alm()`` func
 .. code-block:: python
 
    import scarf
-   import numpy
+   import numpy as np
    nside_mwe = 1
    map_mwe = np.random.random(12 * nside_mwe ** 2)
    lmax_mwe = 2
