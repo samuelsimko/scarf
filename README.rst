@@ -7,7 +7,7 @@ About
 
 Scarf is a Spherical Harmonic Transform library designed for CMB lensing applications.
 
-The repository uses `DUCC <https://gitlab.mpcdf.mpg.de/mtr/ducc>`_ for the calculations.
+The repository uses `DUCC <https://github.com/mreineck/ducc>`_ for the calculations.
 
 Installation
 ------------
