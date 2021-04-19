@@ -148,18 +148,19 @@ int offset(size_t nside, ptrdiff_t stride, a_d &zbounds){
 
 using namespace ducc0::detail_sharp;
 
-sharp_standard_geom_info GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff_t stride, a_d &phi0, a_d &theta, a_d &wgt){
+sharp_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff_t stride, a_d &phi0, a_d &theta, a_d &wgt){
   auto nph_p = nph.unchecked<1>();
   auto ofs_p = ofs.unchecked<1>();
   auto phi0_p = phi0.unchecked<1>();
   auto theta_p = theta.unchecked<1>();
   auto wgt_p = wgt.unchecked<1>();
-  return sharp_standard_geom_info(nrings, &nph_p[0], &ofs_p[0], stride, &phi0_p[0], &theta_p[0], &wgt_p[0]);
+  auto temp_p = make_unique<sharp_standard_geom_info>(nrings, &nph_p[0], &ofs_p[0], stride, &phi0_p[0], &theta_p[0], &wgt_p[0]);
+  return temp_p.release();
 }
 
 // creates a new geometry info, keeping the rings only in zbounds
-sharp_standard_geom_info keep_rings_in_zbounds(sharp_standard_geom_info *ginfo, double * zbounds){
-   size_t nrings = ginfo->nrings();
+sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds){
+   size_t nrings = ginfo.nrings();
 
    vector<size_t> nph;
    vector<ptrdiff_t> ofs;
@@ -171,87 +172,25 @@ sharp_standard_geom_info keep_rings_in_zbounds(sharp_standard_geom_info *ginfo, 
   size_t iring = 0;
   size_t nrings_new = 0;
   for (; iring < nrings; ++iring){
-    if (cos(ginfo->theta(iring)) >= zbounds[0] && cos(ginfo->theta(iring)) <= zbounds[1]){
+    if (cos(ginfo.theta(iring)) >= zbounds[0] && cos(ginfo.theta(iring)) <= zbounds[1]){
         nrings_new += 1;
         // add ring info to new structure
-        nph.push_back(ginfo->nph(iring));
-        ofs.push_back(ginfo->ofs(iring));
-        phi0.push_back(ginfo->phi0(iring));
-        theta.push_back(ginfo->theta(iring));
-        wgt.push_back(ginfo->weight(iring));
+        nph.push_back(ginfo.nph(iring));
+        ofs.push_back(ginfo.ofs(iring));
+        phi0.push_back(ginfo.phi0(iring));
+        theta.push_back(ginfo.theta(iring));
+        wgt.push_back(ginfo.weight(iring));
         }
   }
-  return sharp_standard_geom_info(nrings_new, &nph[0], &ofs[0], stride, &phi0[0], &theta[0], &wgt[0]);
-}
-
-unique_ptr<sharp_standard_geom_info> sharp_make_subset_healpix_standard_geom_info (size_t nside, ptrdiff_t stride, size_t nrings,
-  const size_t *rings, const double *weight)
-  {
-  size_t npix=nside*nside*12;
-  size_t ncap=2*nside*(nside-1);
-
-  vector<double> theta(nrings), weight_(nrings), phi0(nrings);
-  vector<size_t> nph(nrings);
-  vector<ptrdiff_t> ofs(nrings);
-  ptrdiff_t curofs=0, checkofs; /* checkofs used for assertion introduced when adding rings arg */
-  for (size_t m=0; m<nrings; ++m)
-    {
-    auto ring = (rings==nullptr)? (m+1) : rings[m];
-    size_t northring = (ring>2*nside) ? 4*nside-ring : ring;
-    if (northring < nside)
-      {
-      theta[m] = 2*asin(northring/(sqrt(6.)*nside));
-      nph[m] = 4*northring;
-      phi0[m] = pi/nph[m];
-      checkofs = ptrdiff_t(2*northring*(northring-1))*stride;
-      }
-    else
-      {
-      double fact1 = (8.*nside)/npix;
-      double costheta = (2*nside-northring)*fact1;
-      theta[m] = acos(costheta);
-      nph[m] = 4*nside;
-      if ((northring-nside) & 1)
-        phi0[m] = 0;
-      else
-        phi0[m] = pi/nph[m];
-      checkofs = ptrdiff_t(ncap + (northring-nside)*nph[m])*stride;
-      ofs[m] = curofs;
-      }
-    if (northring != ring) /* southern hemisphere */
-      {
-      theta[m] = pi-theta[m];
-      checkofs = ptrdiff_t(npix - nph[m])*stride - checkofs;
-      ofs[m] = curofs;
-      }
-    weight_[m]=4.*pi/npix*((weight==nullptr) ? 1. : weight[northring-1]);
-    if (rings==nullptr)
-      MR_assert(curofs==checkofs, "Bug in computing ofs[m]");
-    ofs[m] = curofs;
-    curofs+=ptrdiff_t(nph[m]);
-    }
-
-  return make_unique<sharp_standard_geom_info>(nrings, nph.data(), ofs.data(), stride, phi0.data(), theta.data(), weight_.data());
-  }
-
-unique_ptr<sharp_standard_geom_info> sharp_make_weighted_healpix_standard_geom_info (size_t nside, ptrdiff_t stride,
-  const double *weight)
-  {
-  return sharp_make_subset_healpix_standard_geom_info(nside, stride, 4*nside-1, nullptr, weight);
-  }
-
-
-
-sharp_standard_geom_info make_healpix_geom_info(size_t nside, ptrdiff_t stride){
-  return *sharp_make_weighted_healpix_standard_geom_info(nside, stride, nullptr);
+  return make_unique<sharp_standard_geom_info>(nrings_new, &nph[0], &ofs[0], stride, &phi0[0], &theta[0], &wgt[0]).release();
 }
 
 
 
-a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_standard_geom_info ginfo_new = keep_rings_in_zbounds(ginfo, &zb[0]);
+  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -262,15 +201,15 @@ a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, siz
   auto mr = map.unchecked<1>();
   auto ar = alm.mutable_unchecked<1>();
 
-  sharp_map2alm(&ar[0], &mr[0], ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  sharp_map2alm(&ar[0], &mr[0], *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
   return alm;
 }
 
-a_d_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int64_t spin,
+a_d_c map2alm_spin_ginfo(sharp_geom_info *ginfo, const a_d_c &map, int64_t spin,
     const int64_t lmax, const int64_t mmax, const int nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_standard_geom_info ginfo_new = keep_rings_in_zbounds(ginfo, &zb[0]);
+  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -288,15 +227,15 @@ a_d_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int6
   auto mr=map.unchecked<2>();
   MR_assert ((mr.shape(0)==2)&&(mr.shape(1)==npix), "incorrect size of map array");
 
-  sharp_map2alm_spin(spin, &ar(0,0), &ar(1,0), &mr(0, 0), &mr(1, 0), ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  sharp_map2alm_spin(spin, &ar(0,0), &ar(1,0), &mr(0, 0), &mr(1, 0), *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
   return alm;
 }
 
-a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
+a_d_c alm2map_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
     auto zb = zbounds.mutable_unchecked<1>();
-    sharp_standard_geom_info ginfo_new = keep_rings_in_zbounds(ginfo, &zb[0]);
+    sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -319,15 +258,15 @@ a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int
 
     auto ar=alm.unchecked<1>();
 
-    sharp_alm2map(&ar[0], &mr[0], ginfo_new, *ainfo, 0, nthreads);
+    sharp_alm2map(&ar[0], &mr[0], *ginfo_new, *ainfo, 0, nthreads);
     return map;
 }
 
-a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int64_t spin,
+a_d_c alm2map_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, int64_t spin,
     const int64_t lmax, const int64_t mmax, const int nthreads, a_d &zbounds){
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_standard_geom_info ginfo_new = keep_rings_in_zbounds(ginfo, &zb[0]);
+  sharp_geom_info* ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -345,38 +284,38 @@ a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int6
 
   a_d_c map(vector<size_t>{2,size_t(npix)});
   auto mr=map.mutable_unchecked<2>();
-  sharp_alm2map_spin(spin, &ar(0,0), &ar(1,0), &mr(0, 0), &mr(1, 0), ginfo_new, *ainfo, 0, nthreads);
+  sharp_alm2map_spin(spin, &ar(0,0), &ar(1,0), &mr(0, 0), &mr(1, 0), *ginfo_new, *ainfo, 0, nthreads);
   return map;
   }
 
 a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
-    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
-    return map2alm_ginfo(&ginfo, map, lmax, mmax, nthreads, zbounds);
+    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    return map2alm_ginfo(ginfo, map, lmax, mmax, nthreads, zbounds);
 
 }
 
 a_d_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
-    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
-    return map2alm_spin_ginfo(&ginfo, map, spin, lmax, mmax, nthreads, zbounds);
+    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    return map2alm_spin_ginfo(ginfo, map, spin, lmax, mmax, nthreads, zbounds);
 }
 
 a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
-    sharp_standard_geom_info  ginfo = make_healpix_geom_info(nside, 1);
-    return alm2map_ginfo(&ginfo, alm, lmax, mmax, nthreads, zbounds);
+    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    return alm2map_ginfo(ginfo, alm, lmax, mmax, nthreads, zbounds);
   }
 
 
 a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
-  sharp_standard_geom_info ginfo = make_healpix_geom_info(nside, 1);
-  return alm2map_spin_ginfo(&ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
+  sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+  return alm2map_spin_ginfo(ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
   }
 
 
@@ -412,25 +351,25 @@ PYBIND11_MODULE(scarf, m) {
   m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
   m.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);
 
-  py::class_<sharp_standard_geom_info>(m ,"Geometry")
+  py::class_<sharp_geom_info>(m ,"Geometry")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
-    .def("nrings", &sharp_standard_geom_info::nrings)
-    .def("nph", &sharp_standard_geom_info::nph, "iring"_a)
-    .def("nphmax", &sharp_standard_geom_info::nphmax)
-    .def("theta", &sharp_standard_geom_info::theta, "iring"_a)
-    .def("cth", &sharp_standard_geom_info::cth, "iring"_a)
-    .def("sth", &sharp_standard_geom_info::sth, "iring"_a)
-    .def("phi0", &sharp_standard_geom_info::phi0, "iring"_a)
-    .def("pair", &sharp_standard_geom_info::pair, "iring"_a)
-    .def("clear_map", &sharp_standard_geom_info::clear_map, "map"_a)
-    .def("get_ring", &sharp_standard_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
-    .def("add_ring", &sharp_standard_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
+    .def("nrings", &sharp_geom_info::nrings)
+    .def("nph", &sharp_geom_info::nph, "iring"_a)
+    .def("nphmax", &sharp_geom_info::nphmax)
+    .def("theta", &sharp_geom_info::theta, "iring"_a)
+    .def("cth", &sharp_geom_info::cth, "iring"_a)
+    .def("sth", &sharp_geom_info::sth, "iring"_a)
+    .def("phi0", &sharp_geom_info::phi0, "iring"_a)
+    .def("pair", &sharp_geom_info::pair, "iring"_a)
+    .def("clear_map", &sharp_geom_info::clear_map, "map"_a)
+    .def("get_ring", &sharp_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
+    .def("add_ring", &sharp_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
     .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  m.def("healpix_geometry", &make_healpix_geom_info, R"pbdoc(
+  m.def("healpix_geometry", &sharp_make_healpix_geom_info, R"pbdoc(
   Creates a HEALPix geometry given the nside.
 
   Parameters
