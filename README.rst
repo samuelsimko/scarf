@@ -4,6 +4,7 @@ Scarf
 
 .. image:: _static/scarflogo.jpg
    :target: _static/scarflogo.jpg
+   :align: center
    :alt: Scarf logo
 
 
