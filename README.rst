@@ -61,13 +61,13 @@ Testing
 --------
 
 A basic pytest is currently executed upon each pull-request and push, for each branch.
-To manually test the code with the existing test directory `tests`, install pytest,
+To manually test the code with the existing test directory **tests**, install ``pytest``,
 
 .. code-block:: console
 
    $ pip install -U pytest
 
-and execute pytest in the root directory of the repo,
+and execute in the root directory of the repository,
 
 .. code-block:: console
 
