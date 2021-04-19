@@ -12,6 +12,13 @@ The repository uses `DUCC <https://github.com/mreineck/ducc>`_ for the calculati
 Installation
 ------------
 
+install all dependencies,
+
+.. code-block:: console
+   
+   $ pip install -r requirements.txt
+
+
 To install the package:
 
 .. code-block:: console
