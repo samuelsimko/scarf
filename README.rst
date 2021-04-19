@@ -37,7 +37,6 @@ For instance, to calculate the alm from a given map, call the `map2alm()` functi
 
 .. code-block:: python
 
-   :linenos:
    import scarf
    import numpy
    nside_mwe = 1
@@ -61,16 +60,16 @@ To manually test the code with the existing test, install pytest,
 
 .. code-block:: console
 
-$ pip install -U pytest
+   $ pip install -U pytest
 
 and execute pytest in the root directory of the repo,
 
 .. code-block:: console
 
-$ pytest
+   $ pytest
 
 or,
 
 .. code-block:: console
 
-$ python3 -m pytest tests
+   $ python3 -m pytest tests
