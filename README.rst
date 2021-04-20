@@ -63,7 +63,7 @@ For instance, to calculate the alm from a given map, call the ``map2alm()`` func
        lmax = lmax_mwe,
        mmax = lmax_mwe,
        nthreads = 1,
-       zbounds = [-1, 1])
+       zbounds = [0, 1])
 
 
 ``zbounds`` is the parameter controlling the latitude of the rings which are transformed.
