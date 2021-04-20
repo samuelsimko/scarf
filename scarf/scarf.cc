@@ -95,28 +95,6 @@ unique_ptr<sharp_geom_info> sharp_make_zbounds_healpix_geom_info (size_t nside, 
   }
 
 
-a_d_c map2truncmap(const a_d_c &map, const int64_t nside, const int64_t lmax,
-                 const int64_t mmax, const int nthreads, a_d &zbounds) {
-    /*
-    UNDER CONSTRUCTION
-    TODO: get truncated map from zbounds
-    */
-    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
-    auto zb = zbounds.mutable_unchecked<1>();
-    sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
-
-    // make triangular alm info
-    unique_ptr<sharp_alm_info> ainfo =
-    set_triangular_alm_info (lmax, mmax);
-
-    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
-    a_c_c alm(n_alm);
-    auto mr = map.unchecked<1>();
-    auto ar = alm.mutable_unchecked<1>();
-    a_d_c map(npix, 0);
-    return map
-}
-
 
 /* Returns the number of pixels of a map with parameters `nside` and `zbounds`.
   This number is lesser or equal to 12*nside**2. */
@@ -209,6 +187,23 @@ sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds
   return make_unique<sharp_standard_geom_info>(nrings_new, &nph[0], &ofs[0], stride, &phi0[0], &theta[0], &wgt[0]).release();
 }
 
+
+a_d_c map2truncmap(const a_d_c &map, const int64_t nside, a_d &zbounds) {
+    /*
+    UNDER CONSTRUCTION
+    TODO: get truncated map from zbounds
+    */
+    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    auto zb = zbounds.mutable_unchecked<1>();
+    sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+
+    auto mr = map.unchecked<1>();
+    size_t npix = 0;
+    for (size_t i = 0; i < ginfo->nrings(); ++i){;
+      npix += ginfo->nph(i);
+    }
+    return map(npix, 0);
+}
 
 
 a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
@@ -315,8 +310,10 @@ a_d_c alm2map_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, int64_t spin,
 a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
+    auto map_truncated = map2truncmap(map, nside, zbounds);
+    map_truncated = map
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
-    return map2alm_ginfo(ginfo, map, lmax, mmax, nthreads, zbounds);
+    return map2alm_ginfo(ginfo, map_truncated, lmax, mmax, nthreads, zbounds);
 
 }
 
