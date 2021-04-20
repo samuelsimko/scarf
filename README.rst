@@ -98,5 +98,10 @@ or,
 For Developer
 -------------
 
-TBD
+Save your changes to the package and reinstall scarf,
+
+.. code-block:: console
+   pip install --user .
+
+It automatically takes care of updating the installed scarf packager with the latest code.
 
