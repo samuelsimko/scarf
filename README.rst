@@ -53,7 +53,8 @@ For instance, to calculate the alm from a given map, call the ``map2alm()`` func
    import scarf
    import numpy as np
    nside_mwe = 1
-   map_mwe = np.random.random(12 * nside_mwe ** 2)
+   npix_mwe = 12 * nside_mwe ** 2
+   map_mwe = np.random.random(npix_mwe)
    lmax_mwe = 2
    
    scarf_alm = scarf.map2alm(
@@ -66,7 +67,7 @@ For instance, to calculate the alm from a given map, call the ``map2alm()`` func
 
 
 ``zbounds`` is the parameter controlling the latitude of the rings which are transformed.
-``zbound = sin(latitude)``, where latitude goes from -90 to 90 degree.
+``zbound = cos(latitude)``, where latitude goes from Pi to 0 radian.
 Setting ``zbounds = [0,1]`` thus restricts ``map2alm()`` to the northern hemisphere.
 
 
@@ -91,3 +92,10 @@ or,
 .. code-block:: console
 
    $ python3 -m pytest tests
+
+
+
+For Developer
+-------------
+
+
