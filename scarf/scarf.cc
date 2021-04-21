@@ -189,20 +189,26 @@ sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds
 
 
 a_d_c map2truncmap(const a_d_c &map, const int64_t nside, a_d &zbounds) {
-    /*
-    UNDER CONSTRUCTION
-    TODO: get truncated map from zbounds
-    */
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     auto zb = zbounds.mutable_unchecked<1>();
     sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
-    auto mr = map.unchecked<1>();
     size_t npix = 0;
     for (size_t i = 0; i < ginfo->nrings(); ++i){;
       npix += ginfo->nph(i);
     }
-    return map(npix, 0);
+    a_d_c map_trunc(npix, 0);
+    auto mr = map.unchecked<1>();
+    /*auto map_trunc = map_trunc.unchecked<1>();
+
+
+    /**
+     * truncate the map
+     * 
+     */
+
+
+    return map_trunc(npix, 0);
 }
 
 
@@ -311,7 +317,7 @@ a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
     auto map_truncated = map2truncmap(map, nside, zbounds);
-    map_truncated = map
+    map_truncated = map;
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return map2alm_ginfo(ginfo, map_truncated, lmax, mmax, nthreads, zbounds);
 
