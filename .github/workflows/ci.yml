@@ -20,7 +20,7 @@ jobs:
           run: black --check setup.py tests scarf docs
 
     test-macos:
-      runs-on: macos-11.0
+      runs-on: macOS-latest
       steps:
         - uses: actions/checkout@v2
 
