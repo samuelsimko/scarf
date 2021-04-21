@@ -1,4 +1,4 @@
 [submodule "ducc"]
 	path = ducc
 	url = https://github.com/NextGenCMB/ducc/
-	branch = fix
+	branch = access_phase
