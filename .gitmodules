@@ -1,3 +1,4 @@
 [submodule "ducc"]
 	path = ducc
-	url = https://github.com/mreineck/ducc/
+	url = https://github.com/NextGenCMB/ducc/
+	branch = feature/oldphase
