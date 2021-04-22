@@ -316,10 +316,8 @@ a_d_c alm2map_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, int64_t spin,
 a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
-    auto map_truncated = map2truncmap(map, nside, zbounds);
-    map_truncated = map;
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
-    return map2alm_ginfo(ginfo, map_truncated, lmax, mmax, nthreads, zbounds);
+    return map2alm_ginfo(ginfo, map, lmax, mmax, nthreads, zbounds);
 
 }
 
