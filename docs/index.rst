@@ -11,6 +11,22 @@ Welcome to Scarf's documentation!
    :caption: Contents:
 
 
+Installation
+------------
+
+.. toctree::
+   :maxdepth: 1
+
+   install
+
+Functions
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   geometry
+   sht
 
 Indices and tables
 ==================
