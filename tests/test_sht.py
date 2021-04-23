@@ -13,7 +13,7 @@ def test_map2alm():
     nside = 128
     lmax = nside
     m = np.random.random(12 * nside ** 2)
-    hp_alm = hp.sphtfunc.map2alm(m, nside, lmax, iter=0, verbose=False)
+    hp_alm = hp.sphtfunc.map2alm(m, lmax, iter=0, verbose=False)
     scarf_alm = scarf.map2alm(m, nside, lmax, lmax, 1, [-1, 1])
     print(np.linalg.norm(hp_alm - scarf_alm))
     assert np.linalg.norm(hp_alm - scarf_alm) < 1e-7
