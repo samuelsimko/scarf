@@ -50,7 +50,8 @@ def test_map2alm_spin():
     mu = np.random.random(12 * nside ** 2)
 
     hp_map = hp.map2alm([mt, mq, mu], lmax, mmax, pol=True, verbose=False)
-    scarf_map = scarf.map2alm_spin([mq,mu], 0, nside, lmax, mmax, 1, [-1, 1])
+    print(np.array([mq, mq]).shape)
+    scarf_map = scarf.map2alm_spin(np.array([mq, mq]), 0, nside, lmax, mmax, 1, [-1, 1])
     print(np.linalg.norm(hp_map - scarf_map))
     assert np.linalg.norm(hp_map - scarf_map) < 1e-7
 
