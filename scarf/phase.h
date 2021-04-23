@@ -38,6 +38,23 @@ namespace detail_sharp {
 
 using std::complex;
 
+static size_t new_nchunks_max=1;
+
+static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize)
+  {
+  chunksize = (ndata+new_nchunks_max-1)/new_nchunks_max;
+  if (chunksize>=chunksize_min) // use max number of chunks
+    chunksize = ((chunksize+nmult-1)/nmult)*nmult;
+  else // need to adjust chunksize and nchunks
+    {
+    nchunks = (ndata+chunksize_min-1)/chunksize_min;
+    chunksize = (ndata+nchunks-1)/nchunks;
+    if (nchunks>1)
+      chunksize = ((chunksize+nmult-1)/nmult)*nmult;
+    }
+  nchunks = (ndata+chunksize-1)/chunksize;
+  }
+
 class phase_job : public sharp_job {
 
   public:
@@ -64,7 +81,7 @@ DUCC0_NOINLINE void execute()// override
    init_output();
 
   size_t nchunks, chunksize;
-  get_chunk_info(ginfo.npairs(), (spin==0) ? 128 : 64,
+  get_singular_chunk_info(ginfo.npairs(), (spin==0) ? 128 : 64,
                  nchunks,chunksize);
 //FIXME: needs to be changed to "nm"
 //
@@ -135,7 +152,7 @@ template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T
     sharp_geom_info &geom_info, int mmax, int spin)
   {
    size_t nchunks, chunksize;
-   get_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
+   get_singular_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
        nchunks,chunksize);
    for (size_t chunk=0; chunk<nchunks; ++chunk){
      size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());
@@ -148,7 +165,7 @@ template<typename T> void phase_execute_map2phase (phase_job &job, mav<complex<T
     sharp_geom_info &geom_info, int mmax, int spin)
   {
     size_t nchunks, chunksize;
-    get_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
+    get_singular_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
         nchunks,chunksize);
 
     for (size_t chunk=0; chunk<nchunks; ++chunk){

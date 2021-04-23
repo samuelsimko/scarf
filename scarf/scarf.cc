@@ -340,7 +340,7 @@ a_c_c alm2phase_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lm
 
     size_t nchunks;
     size_t chunksize;
-    get_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+    get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
         nchunks,chunksize);
 
     auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, mmax+1, 1});
@@ -425,7 +425,7 @@ a_c_c map2phase_ginfo(sharp_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mm
 
   size_t nchunks;
   size_t chunksize;
-  get_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+  get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
       nchunks,chunksize);
 
   auto phase_m2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, mmax+1, 1});
