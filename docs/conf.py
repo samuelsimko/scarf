@@ -13,6 +13,8 @@
 import os
 import sys
 
+import sphinx_rtd_theme
+
 sys.path.insert(0, os.path.abspath(".."))
 
 
@@ -29,7 +31,6 @@ author = "Samuel Simko"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 
-import sphinx_rtd_theme
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -37,7 +38,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx_rtd_theme",
     'sphinx.ext.napoleon'
-
 ]
 
 
