@@ -19,7 +19,26 @@ jobs:
         - name: Check Python code formatting
           run: black --check setup.py tests scarf docs
 
-    python-tests:
+    test-macos:
+      runs-on: macOS-latest
+      steps:
+        - uses: actions/checkout@v2
+
+        - name: Setup Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.9
+
+        - name: Install Python dependencies
+          run: pip install numpy healpy pytest pybind11 setuptools
+
+        - name: Initialize submodule
+          run: git submodule update --init --recursive
+
+        - name: Install scarf 
+          run: python setup.py install --user --prefix=
+
+    test-linux:
       runs-on: ubuntu-20.04
       steps:
         - uses: actions/checkout@v2
@@ -33,7 +52,7 @@ jobs:
           run: pip install numpy healpy pytest pybind11 setuptools
 
         - name: Initialize submodule
-          run: git submodule update --init --recursive --remote
+          run: git submodule update --init --recursive
 
         - name: Install scarf 
           run: python setup.py install --user --prefix=
