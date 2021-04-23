@@ -61,7 +61,7 @@ DUCC0_NOINLINE void execute()// override
     detail_sht::YlmBase::get_norm (lmax, spin);
 
 /* clear output arrays if requested */
-  // init_output();
+   init_output();
 
   size_t nchunks, chunksize;
   get_chunk_info(ginfo.npairs(), (spin==0) ? 128 : 64,
@@ -126,7 +126,7 @@ template<typename T> void phase_execute (sharp_jobtype type, size_t spin, const 
   for (size_t i = 0; i < geom_info.nrings(); ++i){;
     npix += geom_info.nph(i);
   }
-  std::vector<std::any> dummy_map(npix, 0);
+  std::vector<double> dummy_map(npix, 0);
   phase_job job(type, spin, alm, {&dummy_map[0]}, phase, geom_info, alm_info, flags, nthreads);
   job.execute();
   }
@@ -139,7 +139,7 @@ template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T
        nchunks,chunksize);
    for (size_t chunk=0; chunk<nchunks; ++chunk){
      size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());
-     job.init_output();
+     //job.init_output();
      job.phase2map(mmax, llim, ulim, phase);
     }
   }
