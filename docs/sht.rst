@@ -3,7 +3,7 @@
 .. currentmodule:: scarf
 
 Spherical Harmonics Transforms
-=======
+==============================
 
 .. autosummary::
    :toctree: generated/
