@@ -9,4 +9,6 @@ Spherical Harmonics Transforms
    :toctree: generated/
 
    map2alm
+   map2alm_spin
    alm2map
+   alm2map_spin
