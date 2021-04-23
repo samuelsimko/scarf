@@ -1,3 +1,4 @@
+# %%
 import healpy as hp
 import numpy as np
 import scarf as scarfcpp
@@ -33,3 +34,5 @@ print(
 )
 
 print("np.pi/(3*nside**2) : ", np.pi / (3 * nside ** 2))
+
+# %%
