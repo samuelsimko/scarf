@@ -29,6 +29,32 @@ def test_alm2map():
     assert np.linalg.norm(hp_map - scarf_map) < 1e-7
 
 
+def test_alm2map_spin():
+    nside = 128
+    lmax = nside
+    almt = np.random.random(hp.Alm.getsize(lmax)).astype(np.complex)
+    almq = np.random.random(hp.Alm.getsize(lmax)).astype(np.complex)
+    almu = np.random.random(hp.Alm.getsize(lmax)).astype(np.complex)
+    hp_map = hp.sphtfunc.alm2map([almt, almq, almu], nside, lmax, pol=True, verbose=False)
+    scarf_map = scarf.alm2map_spin([almq, almu], 0, nside, lmax, lmax, 1, [-1, 1])
+    print(np.linalg.norm(hp_map - scarf_map))
+    assert np.linalg.norm(hp_map - scarf_map) < 1e-7
+
+
+def test_map2alm_spin():
+    nside = 128
+    lmax = nside
+    mmax = lmax
+    mt = np.random.random(12 * nside ** 2)
+    mq = np.random.random(12 * nside ** 2)
+    mu = np.random.random(12 * nside ** 2)
+
+    hp_map = hp.map2alm([mt, mq, mu], lmax, mmax, pol=True, verbose=False)
+    scarf_map = scarf.map2alm_spin([mq,mu], 0, nside, lmax, mmax, 1, [-1, 1])
+    print(np.linalg.norm(hp_map - scarf_map))
+    assert np.linalg.norm(hp_map - scarf_map) < 1e-7
+
+
 def test_zbounds():
     nside = 128
     lmax = nside
