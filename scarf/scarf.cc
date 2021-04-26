@@ -328,7 +328,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{pix}`)
     Temperature map
-  )pbdoc""alm"_a, "spin"_a,
+  )pbdoc""alm"_a, "spin"_a, "nside"_a, 
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   py::class_<sharp_geom_info>(m ,"Geometry")
