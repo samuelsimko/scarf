@@ -1,11 +1,13 @@
 Installation procedure
 ================================
 
-We distinguish between,
+Are you a,
 
-      * a user, who will work with the main branch or a release of ``scarf``,
-      * a developer, who uses his own scarf branches, as well as DUCC branches
+      * :ref:`RST User`, who will work with the main branch or a release of ``scarf``?
+      * :ref:`RST Developer`, who perhaps also creates ``scarf`` or ``DUCC`` branches?
 
+
+.. _RST User:
 
 User
 -----
@@ -21,6 +23,7 @@ User
 It is recommended to install ``scarf`` in a virtual environment.
 
 
+.. _RST Developer:
 
 Developer
 ----------
@@ -165,7 +168,7 @@ This guarantees that the correct branch and commit of the submodule is accessed,
 
 
 Minimal Working Example
-========================
+============================
 
 Import ``scarf`` (and ``numpy``, for the following example). It provides almost all spherical harmonic transforms
 like healpy and follows a similar naming convention.
