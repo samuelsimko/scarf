@@ -28,12 +28,12 @@ It is recommended to install ``scarf`` in a virtual environment.
 Developer
 ----------
 
-Skip this section if you don't plan on working on scarf or DUCC
+Good to see you want to improve ``scarf`` and its functionalities!
 
 General
 **********
 
-The Python binder creates and installs a scarf package onto your machine by creating a shared resource (.so), thus,
+The Python binder creates and installs a ``scarf`` package onto your machine, which in return uses a shared resource (.so).
 
 .. code-block:: console
 
@@ -42,14 +42,14 @@ The Python binder creates and installs a scarf package onto your machine by crea
 won't be sufficient to have it execute your edit, as one needs to update the .so file.
 To do so,
 
-   * Save any changes you have made to the code,
+   * Save any changes made to the files,
    * ``pip install --user .``
 
 
 Scarf branch
 **************
 
-Simply create your own branch, add, commit and push by executing,
+Create a branch, add, commit and push by executing,
 
 .. code-block:: console
 
@@ -69,7 +69,6 @@ Here, it is assumed that your remote repo is named ``origin``. For any subsequen
 DUCC branch
 ************
 
-We will discuss the following steps.
 To make ``scarf`` work with an alternative ``DUCC`` branch, first,
 
       1. create a ``DUCC`` branch,
@@ -153,7 +152,7 @@ Without submodules, switching between branches is simple,
 
 locally replaces the current files with the files from the <branchname> branch and you are good to go.
 
-It is slightly more tedious when working with submodules, espcially when you would like to switch the branch of the submodule.
+It is slightly more tedious when working with submodules, espcially when switching between branches of the submodule.
 
 
 The most simple solution is to execute the following, whenever switching between scarf or ducc branches,
