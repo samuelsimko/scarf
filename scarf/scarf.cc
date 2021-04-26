@@ -353,7 +353,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{alm}`)
     Temperature alm
-  )pbdoc", "map"_a, "nside"_a, "lmax"_a,
+  )pbdoc", "map"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
 
@@ -377,7 +377,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{alm}`)
     Polarisation alm
-  )pbdoc", "map"_a, "spin"_a, "nside"_a, "lmax"_a,
+  )pbdoc", "map"_a, "spin"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("alm2map", &alm2map, R"pbdoc(
@@ -423,7 +423,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{pix}`)
     Temperature map
-  )pbdoc""alm"_a, "spin"_a, "nside"_a,
+  )pbdoc""alm"_a, "spin"_a,
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
@@ -459,7 +459,7 @@ PYBIND11_MODULE(scarf, m) {
 
   Returns
   -------
-  geom : Geometry
+  Geometry
     A Scarf geometry following the HEALPix scheme
   )pbdoc", "nside"_a, "stride"_a);
 }
