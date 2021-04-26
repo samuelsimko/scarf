@@ -330,22 +330,96 @@ PYBIND11_MODULE(scarf, m) {
   )pbdoc";
 
   m.def("map2alm", &map2alm, R"pbdoc(
-  Computes alms from a given map
+  Computes alms from a temperature map.
+
+  Parameters
+  ----------
+  map : np.array, shape (:math:`N_{pix}`,)
+    The temperature map
+  lmax: int, scalar
+    The maximum angular momentum quantum number (multipole) of the powerspectrum.
+  mmax: int, scalar
+    The maximum magnetic quantum number of the powerspectrum.
+  nthreads: int, scalar
+    The number of threads for the computation.
+  zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+    The latitudinal bounds. Only rings within zbounds will be calculated.
+
+  Returns
+  -------
+  np.array, shape (:math:`N_{alm}`)
+    Temperature alm
   )pbdoc", "map"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
 
   m.def("map2alm_spin", &map2alm_spin, R"pbdoc(
-  Computes alms from a given map
+  Computes alms from a polarisation map.
+
+  Parameters
+  ----------
+  map : np.array, shape (:math:`N_{pix}`,)
+    The polarisation map.
+  lmax: int, scalar
+    The maximum angular momentum quantum number (multipole) of the powerspectrum.
+  mmax: int, scalar
+    The maximum magnetic quantum number of the powerspectrum.
+  nthreads: int, scalar
+    The number of threads for the computation.
+  zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+    The latitudinal bounds. Only rings within zbounds will be calculated.
+
+  Returns
+  -------
+  np.array, shape (:math:`N_{alm}`)
+    Polarisation alm
   )pbdoc", "map"_a, "spin"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("alm2map", &alm2map, R"pbdoc(
-    Computes a Healpix map given the alm.
+  Computes a Healpix temperature map from alm.
+
+  Parameters
+  ----------
+  alm : np.array, shape (:math:`N_{alm}`,)
+    The temperature alm.
+  lmax: int, scalar
+    The maximum angular momentum quantum number (multipole) of the powerspectrum.
+  mmax: int, scalar
+    The maximum magnetic quantum number of the powerspectrum.
+  nthreads: int, scalar
+    The number of threads for the computation.
+  zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+    The latitudinal bounds. Only rings within zbounds will be calculated.
+
+  Returns
+  -------
+  np.array, shape (:math:`N_{pix}`)
+    Temperature map
   )pbdoc", "alm"_a, "nside"_a, "lmax"_a,
                    "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  m.def("alm2map_spin", &alm2map_spin, "alm"_a, "spin"_a, "nside"_a,
+  m.def("alm2map_spin", &alm2map_spin, R"pbdoc(
+  Computes a Healpix polarisation map from alm.
+
+  Parameters
+  ----------
+  alm : np.array, shape (:math:`N_{alm}`,)
+    The polarisation alm
+  lmax: int, scalar
+    The maximum angular momentum quantum number (multipole) of the powerspectrum.
+  mmax: int, scalar
+    The maximum magnetic quantum number of the powerspectrum.
+  nthreads: int, scalar
+    The number of threads for the computation.
+  zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+    The latitudinal bounds. Only rings within zbounds will be calculated.
+
+  Returns
+  -------
+  np.array, shape (:math:`N_{pix}`)
+    Temperature map
+  )pbdoc""alm"_a, "spin"_a, "nside"_a,
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
