@@ -292,6 +292,8 @@ PYBIND11_MODULE(scarf, m) {
   ----------
   alm : np.array, shape (:math:`N_{alm}`,)
     The temperature alm.
+  nside : int, scalar
+    The number of sides for the output map. This is the number of pixels along the diagonal of a healpix-grid-base-pixel.
   lmax: int, scalar
     The maximum angular momentum quantum number (multipole) of the powerspectrum.
   mmax: int, scalar
@@ -315,6 +317,8 @@ PYBIND11_MODULE(scarf, m) {
   ----------
   alm : np.array, shape (:math:`N_{alm}`,)
     The polarisation alm
+  nside : int, scalar
+    The number of sides for the output map. This is the number of pixels along the diagonal of a healpix-grid-base-pixel.
   lmax: int, scalar
     The maximum angular momentum quantum number (multipole) of the powerspectrum.
   mmax: int, scalar
