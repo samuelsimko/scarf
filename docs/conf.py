@@ -12,13 +12,10 @@
 #
 import os
 import sys
-import mock
 
 import sphinx_rtd_theme
 
-sys.path.insert(0, os.path.abspath(".."))
-
-sys.modules['scarf'] = mock.Mock()
+sys.path.insert(0, os.path.abspath("../scarf"))
 
 
 # -- Project information -----------------------------------------------------
