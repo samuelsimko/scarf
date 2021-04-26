@@ -52,100 +52,6 @@ unique_ptr<sharp_alm_info> set_triangular_alm_info (int64_t lmax, int64_t mmax)
   }
 
 
-
-/* Creates a geometry information describing a HEALPix map with an
-   Nside parameter `nside`.
-   The zbounds parameter `zbounds` is an array of two elements, with zbounds[0] <= zbounds[1].
-   Every ring whose cos(theta) is not inside of the zbounds interval will not be included.
-   `weight` contains the relative ring weights and must have 2*nside entries.
-   If `weight` is a null pointer, all weights are assumed to be 1. */
-unique_ptr<sharp_geom_info> sharp_make_zbounds_healpix_geom_info (size_t nside, ptrdiff_t stride, double* zbounds,
-    const double *weight)
-  {
-  size_t npix=nside*nside*12;
-  size_t nrings = 4*nside-1;
-  size_t* rings = new size_t[nrings];
-
-  size_t nrings_new = 0;
-
-  for (size_t m = 0; m < nrings; ++m){
-    size_t ring = m + 1;
-    double cth;
-    size_t northring = (ring>2*nside) ? 4*nside-ring : ring;
-    if (northring < nside){
-      cth = cos(2*asin(northring/(sqrt(6.)*nside)));
-      // cth = 1 - (northring*northring)/(3*nside*nside); 
-    } else {
-      double fact1 = (8.*nside)/npix;
-      cth = (2*nside-northring)*fact1;
-    }
-    if (northring != ring){ // southern hemisphere
-      cth *= -1;
-    }
-    // if cth in zbounds, add ring to ring list
-    if (cth >= zbounds[0] && cth <= zbounds[1]){
-      rings[nrings_new] = ring;
-      nrings_new ++;
-    }
-  }
-   unique_ptr<sharp_geom_info> ginfo = ducc0::detail_sharp::sharp_make_subset_healpix_geom_info (nside, stride, nrings_new,
-       rings, weight);
-   delete rings;
-   return ginfo;
-  }
-
-/* Returns the number of pixels of a map with parameters `nside` and `zbounds`.
-  This number is lesser or equal to 12*nside**2. */
-int get_npix(size_t nside, ptrdiff_t stride, a_d &zbounds){
-  auto zb = zbounds.mutable_unchecked<1>();
-  unique_ptr<sharp_geom_info> ginfo = sharp_make_zbounds_healpix_geom_info(nside, 1, &zb[0], NULL);
-  int64_t npix = 0;
-  for (long unsigned int i = 0; i < ginfo->nrings(); ++i){
-    npix += ginfo->nph(i);
-  }
-  return npix;
-}
-
-/* Calculates the required offset of the input map for the 
-  map2alm and alm2map routines, 
-  when zbounds[1] is not equal to 1.
-  It is equal to the number of pixels in the rings
-  whose theta parameter is lesser than zbounds[1]. */
-int offset(size_t nside, ptrdiff_t stride, a_d &zbounds){
-  auto zb = zbounds.mutable_unchecked<1>();
-  double * zb_ptr = &zb[0];
-  size_t npix=nside*nside*12;
-  size_t nrings = 4*nside-1;
-  int offset = 0;
-  int nph = 0; // number of pixels in current ring
-
-  for (size_t m = 0; m < nrings; ++m){
-    size_t ring = m + 1;
-    double cth;
-    size_t northring = (ring>2*nside) ? 4*nside-ring : ring;
-    double fact1 = (8.*nside)/npix;
-    if (northring < nside){
-      cth = cos(2*asin(northring/(sqrt(6.)*nside)));
-      // cth = 1 - (northring*northring)/(3*nside*nside); 
-      nph = 4*northring;
-    } else {
-      cth = (2*nside-northring)*fact1;
-      nph = 4*nside;
-    }
-    if (northring != ring){ // southern hemisphere
-      cth *= -1;
-    }
-    if (cth >= zb_ptr[0] && cth <= zb_ptr[1]){
-      return offset;
-    } else {
-      offset += nph;
-    }
-    }
-  return 0;
-  }
-
-
-
 using namespace ducc0::detail_sharp;
 
 sharp_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff_t stride, a_d &phi0, a_d &theta, a_d &wgt){
@@ -353,8 +259,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{alm}`)
     Temperature alm
-  )pbdoc", "map"_a, "lmax"_a,
-                   "mmax"_a, "nthreads"_a, "zbounds"_a);
+  )pbdoc", "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
 
   m.def("map2alm_spin", &map2alm_spin, R"pbdoc(
@@ -425,9 +330,6 @@ PYBIND11_MODULE(scarf, m) {
     Temperature map
   )pbdoc""alm"_a, "spin"_a,
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
-
-  m.def("offset", &offset, "nside"_a, "stride"_a, "zbounds"_a);
-  m.def("get_npix", &get_npix, "nside"_a, "stride"_a, "zbounds"_a);
 
   py::class_<sharp_geom_info>(m ,"Geometry")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
