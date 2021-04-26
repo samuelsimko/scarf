@@ -205,7 +205,7 @@ a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax,
   return alm;
 }
 
-a_d_c map2alm_spin_ginfo(sharp_geom_info *ginfo, const a_d_c &map, int64_t spin,
+a_c_c map2alm_spin_ginfo(sharp_geom_info *ginfo, const a_d_c &map, int64_t spin,
     const int64_t lmax, const int64_t mmax, const int nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
@@ -288,17 +288,21 @@ a_d_c alm2map_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, int64_t spin,
   return map;
   }
 
-a_c_c map2alm(const a_d_c &map, const int64_t nside, const int64_t lmax,
+a_c_c map2alm(const a_d_c &map, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
+    const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
+    const int64_t nside = (int) sqrt(npix/12);
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return map2alm_ginfo(ginfo, map, lmax, mmax, nthreads, zbounds);
 
 }
 
-a_d_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t nside, const int64_t lmax,
+a_c_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t lmax,
                  const int64_t mmax, const int nthreads, a_d &zbounds) {
 
+    const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
+    const int64_t nside = (int) sqrt(npix/12);
     sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return map2alm_spin_ginfo(ginfo, map, spin, lmax, mmax, nthreads, zbounds);
 }
