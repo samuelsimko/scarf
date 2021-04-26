@@ -68,4 +68,4 @@ autosummary_generate = True
 
 
 # The master toctree document.
-root_doc = "contents"
+master_doc = "index"
