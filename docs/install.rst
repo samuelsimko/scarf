@@ -164,7 +164,6 @@ This guarantees that the correct branch and commit of the submodule is accessed,
 
 
 
-
 Minimal Working Example
 ========================
 
