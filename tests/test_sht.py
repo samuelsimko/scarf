@@ -37,9 +37,7 @@ def test_alm2map_spin():
     hp_map = hp.sphtfunc.alm2map(
         [almt, alme, almb], nside, lmax, pol=True, verbose=False
     )
-    scarf_t = scarf.alm2map(
-        almt, nside, lmax, lmax, 1, [-1, 1]
-    )
+    scarf_t = scarf.alm2map(almt, nside, lmax, lmax, 1, [-1, 1])
     [scarf_q, scarf_u] = scarf.alm2map_spin(
         [alme, almb], 2, nside, lmax, lmax, 1, [-1, 1]
     )
