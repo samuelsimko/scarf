@@ -269,6 +269,8 @@ PYBIND11_MODULE(scarf, m) {
   ----------
   map : np.array, shape (:math:`N_{pix}`,)
     The polarisation map.
+  spin : int, scalar
+    The spin of the field.
   lmax: int, scalar
     The maximum angular momentum quantum number (multipole) of the powerspectrum.
   mmax: int, scalar
@@ -317,6 +319,8 @@ PYBIND11_MODULE(scarf, m) {
   ----------
   alm : np.array, shape (:math:`N_{alm}`,)
     The polarisation alm
+  spin : int, scalar
+    The spin of the field.
   nside : int, scalar
     The number of sides for the output map. This is the number of pixels along the diagonal of a healpix-grid-base-pixel.
   lmax: int, scalar
@@ -332,7 +336,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{pix}`)
     Temperature map
-  )pbdoc""alm"_a, "spin"_a, "nside"_a, 
+  )pbdoc", "alm"_a, "spin"_a, "nside"_a, 
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
   py::class_<sharp_geom_info>(m ,"Geometry")
