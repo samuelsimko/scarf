@@ -12,3 +12,6 @@ Spherical Harmonics Transforms
    map2alm_spin
    alm2map
    alm2map_spin
+   alm2phase
+   phase2alm
+   healpix_geometry
