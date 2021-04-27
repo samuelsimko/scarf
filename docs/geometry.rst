@@ -1,5 +1,13 @@
+.. currentmodule:: scarf
+
 Geometry
---------
+=========
+
+.. autosummary::
+   :toctree: generated/
+
+   Geometry
+
 
 ``scarf`` allows users to create their own map geometry, which allows for 
 transforms on custom pixelations.
