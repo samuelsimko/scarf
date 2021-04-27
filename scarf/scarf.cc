@@ -339,7 +339,31 @@ PYBIND11_MODULE(scarf, m) {
   )pbdoc", "alm"_a, "spin"_a, "nside"_a, 
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  py::class_<sharp_geom_info>(m ,"Geometry")
+  py::class_<sharp_geom_info>(m ,"Geometry", R"pbdoc(
+  Creates a geometry specified by the user.
+
+  Parameters
+  ----------
+  nrings : int, scalar
+    The number of rings
+  nph : int,  shape (:math:`N_{rings}`)
+    TBD
+  ofs : int,  shape (:math:`N_{rings}`)
+    TBD
+  stride : int, scalar
+    The stride between two consecutive pixels on the map
+  phi0 : float, shape (:math:`N_{rings}`)
+    TBD
+  theta : float,  shape (:math:`N_{rings}`)
+    The latitude angle of each ring
+  wgt : float,  shape (:math:`N_{rings}`)
+    The weighting for each ring
+  
+  Returns
+  -------
+  Geometry
+    A geometry as specified by the user
+  )pbdoc")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
     .def("nrings", &sharp_geom_info::nrings)
     .def("nph", &sharp_geom_info::nph, "iring"_a)
@@ -372,4 +396,5 @@ PYBIND11_MODULE(scarf, m) {
   Geometry
     A Scarf geometry following the HEALPix scheme
   )pbdoc", "nside"_a, "stride"_a);
+
 }
