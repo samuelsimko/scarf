@@ -15,6 +15,7 @@ static size_t new_nchunks_max=1;
 
 static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize)
   {
+  size_t chunksize_min = 10000;
   chunksize = (ndata+new_nchunks_max-1)/new_nchunks_max;
   if (chunksize>=chunksize_min) // use max number of chunks
     chunksize = ((chunksize+nmult-1)/nmult)*nmult;

@@ -356,7 +356,7 @@ a_c_c alm2phase_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lm
 
     auto ar=alm.unchecked<1>();
 
-    sharp_alm2phase(&ar[0], phase_mav_a2p, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+    sharp_alm2phase(&ar[0], phase_mav_a2p, *ginfo_new, *ainfo, 0, nthreads);
     return phase_a2p;
 }
 
@@ -400,7 +400,7 @@ a_d_c phase2map_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t 
     a_d_c map(vector<size_t>{2,size_t(npix)});
     auto mr=map.mutable_unchecked<2>();
 
-    phase_job job(SHARP_Y, 2, {&ar(0, 0), &ar(1, 0)}, {&mr(0, 0), &mr(1, 0)}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+    phase_job job(SHARP_Y, 2, {&ar(0, 0), &ar(1, 0)}, {&mr(0, 0), &mr(1, 0)}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
     phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 2);
     return map;
   }
@@ -416,7 +416,7 @@ a_d_c phase2map_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t 
     mr[i] = 0;
   }
 
-  phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
   phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 0);
   return map;
 }
@@ -487,7 +487,7 @@ a_c_c alm2phase_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const size_
     MR_assert((ar.shape(0)==2)&&(ar.shape(1)==n_alm),
       "incorrect size of a_lm array");
 
-    sharp_alm2phase_spin(spin, &ar(0, 0), &ar(1, 0), phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+    sharp_alm2phase_spin(spin, &ar(0, 0), &ar(1, 0), phase_mav, *ginfo_new, *ainfo, 0, nthreads);
     return phase;
 }
 
