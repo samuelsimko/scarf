@@ -92,7 +92,6 @@ sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds
 }
 
 
-
 a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
@@ -365,17 +364,117 @@ PYBIND11_MODULE(scarf, m) {
     A geometry as specified by the user
   )pbdoc")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
-    .def("nrings", &sharp_geom_info::nrings)
-    .def("nph", &sharp_geom_info::nph, "iring"_a)
-    .def("nphmax", &sharp_geom_info::nphmax)
-    .def("theta", &sharp_geom_info::theta, "iring"_a)
-    .def("cth", &sharp_geom_info::cth, "iring"_a)
-    .def("sth", &sharp_geom_info::sth, "iring"_a)
-    .def("phi0", &sharp_geom_info::phi0, "iring"_a)
-    .def("pair", &sharp_geom_info::pair, "iring"_a)
-    .def("clear_map", &sharp_geom_info::clear_map, "map"_a)
-    .def("get_ring", &sharp_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
-    .def("add_ring", &sharp_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
+    .def("nrings", &sharp_geom_info::nrings, R"pbdoc(
+    Returns the number of rings of the geometry.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    int
+      The number of rings of the geometry
+      
+    )pbdoc")
+    .def("nph", &sharp_geom_info::nph, R"pbdoc(
+    Returns the number of pixels in the specified ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    int
+      The number of pixels in the ring.
+      
+    )pbdoc", "iring"_a)
+    .def("nphmax", &sharp_geom_info::nphmax,  R"pbdoc(
+    Returns the maximum number of pixels of a ring.
+
+    Parameters
+    ----------
+
+    Returns
+    -------
+    int
+      The maximum number of pixels of a ring.
+      
+    )pbdoc")
+    .def("theta", &sharp_geom_info::theta,  R"pbdoc(
+    Returns the lattitude, in radiants, of a specified ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    double
+      The latitude of the ring
+      
+    )pbdoc", "iring"_a)
+    .def("cth", &sharp_geom_info::cth,  R"pbdoc(
+    Returns the cosinus of the latitude of a specified ring. 
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    double
+      The cosinus of the latitude of the ring.
+      
+    )pbdoc", "iring"_a)
+    .def("sth", &sharp_geom_info::sth,  R"pbdoc(
+    Returns the sinus of the latitude of a specified ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    double
+      The sinus of the latitude of the ring.
+      
+    )pbdoc", "iring"_a)
+    .def("phi0", &sharp_geom_info::phi0,  R"pbdoc(
+    Returns the longitude of the first pixel of a ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    double
+      The longitude of the first pixel of the ring.
+      
+    )pbdoc", "iring"_a)
+    .def("weight", &sharp_geom_info::weight,  R"pbdoc(
+    Returns the weight of the specified ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    double
+      The weight of the ring. 
+      
+    )pbdoc", "iring"_a)
+    //.def("pair", &sharp_geom_info::pair, "iring"_a)
+    //.def("get_ring", &sharp_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
+    //.def("add_ring", &sharp_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
     .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
