@@ -54,7 +54,7 @@ unique_ptr<sharp_alm_info> set_triangular_alm_info (int64_t lmax, int64_t mmax)
 
 using namespace ducc0::detail_sharp;
 
-sharp_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff_t stride, a_d &phi0, a_d &theta, a_d &wgt){
+sharp_standard_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff_t stride, a_d &phi0, a_d &theta, a_d &wgt){
   auto nph_p = nph.unchecked<1>();
   auto ofs_p = ofs.unchecked<1>();
   auto phi0_p = phi0.unchecked<1>();
@@ -65,7 +65,7 @@ sharp_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs, ptrdiff
 }
 
 // creates a new geometry info, keeping the rings only in zbounds
-sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds){
+sharp_standard_geom_info * keep_rings_in_zbounds(sharp_standard_geom_info &ginfo, double * zbounds){
    size_t nrings = ginfo.nrings();
 
    vector<size_t> nph;
@@ -91,11 +91,15 @@ sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds
   return make_unique<sharp_standard_geom_info>(nrings_new, &nph[0], &ofs[0], stride, &phi0[0], &theta[0], &wgt[0]).release();
 }
 
+sharp_standard_geom_info * sharp_make_standard_healpix_geom_info(size_t nside, size_t stride){
+  return sharp_make_healpix_geom_info(nside, stride).release();
+}
 
-a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -110,11 +114,11 @@ a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax,
   return alm;
 }
 
-a_c_c map2alm_spin_ginfo(sharp_geom_info *ginfo, const a_d_c &map, int64_t spin,
+a_c_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int64_t spin,
     const int64_t lmax, const int64_t mmax, const int nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -136,11 +140,11 @@ a_c_c map2alm_spin_ginfo(sharp_geom_info *ginfo, const a_d_c &map, int64_t spin,
   return alm;
 }
 
-a_d_c alm2map_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
+a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
     auto zb = zbounds.mutable_unchecked<1>();
-    sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+    sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -167,11 +171,11 @@ a_d_c alm2map_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lmax
     return map;
 }
 
-a_d_c alm2map_spin_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, int64_t spin,
+a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int64_t spin,
     const int64_t lmax, const int64_t mmax, const int nthreads, a_d &zbounds){
 
   auto zb = zbounds.mutable_unchecked<1>();
-  sharp_geom_info* ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+  sharp_standard_geom_info* ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -198,7 +202,7 @@ a_c_c map2alm(const a_d_c &map, const int64_t lmax,
 
     const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
     const int64_t nside = (int) sqrt(npix/12);
-    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return map2alm_ginfo(ginfo, map, lmax, mmax, nthreads, zbounds);
 
 }
@@ -208,14 +212,14 @@ a_c_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t lmax,
 
     const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
     const int64_t nside = (int) sqrt(npix/12);
-    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return map2alm_spin_ginfo(ginfo, map, spin, lmax, mmax, nthreads, zbounds);
 }
 
 a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
-    sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+    sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return alm2map_ginfo(ginfo, alm, lmax, mmax, nthreads, zbounds);
   }
 
@@ -223,7 +227,7 @@ a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
 a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds){
 
-  sharp_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
+  sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
   return alm2map_spin_ginfo(ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
   }
 
@@ -338,7 +342,7 @@ PYBIND11_MODULE(scarf, m) {
   )pbdoc", "alm"_a, "spin"_a, "nside"_a, 
       "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  py::class_<sharp_geom_info>(m ,"Geometry", R"pbdoc(
+  py::class_<sharp_standard_geom_info>(m ,"Geometry", R"pbdoc(
   Creates a geometry specified by the user.
 
   Parameters
@@ -364,7 +368,7 @@ PYBIND11_MODULE(scarf, m) {
     A geometry as specified by the user
   )pbdoc")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
-    .def("nrings", &sharp_geom_info::nrings, R"pbdoc(
+    .def("get_nrings", &sharp_standard_geom_info::nrings, R"pbdoc(
     Returns the number of rings of the geometry.
 
     Parameters
@@ -376,7 +380,7 @@ PYBIND11_MODULE(scarf, m) {
       The number of rings of the geometry
       
     )pbdoc")
-    .def("nph", &sharp_geom_info::nph, R"pbdoc(
+    .def("get_nph", &sharp_standard_geom_info::nph, R"pbdoc(
     Returns the number of pixels in the specified ring.
 
     Parameters
@@ -390,7 +394,7 @@ PYBIND11_MODULE(scarf, m) {
       The number of pixels in the ring.
       
     )pbdoc", "iring"_a)
-    .def("nphmax", &sharp_geom_info::nphmax,  R"pbdoc(
+    .def("get_nphmax", &sharp_standard_geom_info::nphmax,  R"pbdoc(
     Returns the maximum number of pixels of a ring.
 
     Parameters
@@ -402,7 +406,7 @@ PYBIND11_MODULE(scarf, m) {
       The maximum number of pixels of a ring.
       
     )pbdoc")
-    .def("theta", &sharp_geom_info::theta,  R"pbdoc(
+    .def("get_theta", &sharp_standard_geom_info::theta,  R"pbdoc(
     Returns the lattitude, in radiants, of a specified ring.
 
     Parameters
@@ -416,7 +420,7 @@ PYBIND11_MODULE(scarf, m) {
       The latitude of the ring
       
     )pbdoc", "iring"_a)
-    .def("cth", &sharp_geom_info::cth,  R"pbdoc(
+    .def("get_cth", &sharp_standard_geom_info::cth,  R"pbdoc(
     Returns the cosinus of the latitude of a specified ring. 
 
     Parameters
@@ -430,7 +434,7 @@ PYBIND11_MODULE(scarf, m) {
       The cosinus of the latitude of the ring.
       
     )pbdoc", "iring"_a)
-    .def("sth", &sharp_geom_info::sth,  R"pbdoc(
+    .def("get_sth", &sharp_standard_geom_info::sth,  R"pbdoc(
     Returns the sinus of the latitude of a specified ring.
 
     Parameters
@@ -444,7 +448,7 @@ PYBIND11_MODULE(scarf, m) {
       The sinus of the latitude of the ring.
       
     )pbdoc", "iring"_a)
-    .def("phi0", &sharp_geom_info::phi0,  R"pbdoc(
+    .def("get_phi0", &sharp_standard_geom_info::phi0,  R"pbdoc(
     Returns the longitude of the first pixel of a ring.
 
     Parameters
@@ -458,7 +462,7 @@ PYBIND11_MODULE(scarf, m) {
       The longitude of the first pixel of the ring.
       
     )pbdoc", "iring"_a)
-    .def("weight", &sharp_geom_info::weight,  R"pbdoc(
+    .def("get_weight", &sharp_standard_geom_info::weight,  R"pbdoc(
     Returns the weight of the specified ring.
 
     Parameters
@@ -472,15 +476,22 @@ PYBIND11_MODULE(scarf, m) {
       The weight of the ring. 
       
     )pbdoc", "iring"_a)
-    //.def("pair", &sharp_geom_info::pair, "iring"_a)
-    //.def("get_ring", &sharp_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
-    //.def("add_ring", &sharp_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
+    .def_readwrite("theta", &sharp_standard_geom_info::theta_array)
+    .def_readwrite("phi0", &sharp_standard_geom_info::phi0_array)
+    .def_readwrite("weight", &sharp_standard_geom_info::weight_array)
+    .def_readwrite("cth", &sharp_standard_geom_info::cth_array)
+    .def_readwrite("sth", &sharp_standard_geom_info::sth_array)
+    .def_readwrite("nph", &sharp_standard_geom_info::nph_array)
+    .def_readwrite("ofs", &sharp_standard_geom_info::ofs_array)
+    //.def("pair", &sharp_standard_geom_info::pair, "iring"_a)
+    //.def("get_ring", &sharp_standard_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
+    //.def("add_ring", &sharp_standard_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
     .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  m.def("healpix_geometry", &sharp_make_healpix_geom_info, R"pbdoc(
+  m.def("healpix_geometry", &sharp_make_standard_healpix_geom_info, R"pbdoc(
   Creates a HEALPix geometry given the nside.
 
   Parameters
