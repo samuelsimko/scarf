@@ -534,7 +534,7 @@ PYBIND11_MODULE(scarf, m) {
 
     Returns
     -------
-    double
+    int
       The pixel offset of the ring. 
       
     )pbdoc", "iring"_a)
