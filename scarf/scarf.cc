@@ -360,6 +360,46 @@ a_c_c alm2phase_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lm
     return phase_a2p;
 }
 
+a_c_c alm2phase_weights_ginfo(sharp_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
+      const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
+
+    auto zb = zbounds.mutable_unchecked<1>();
+    sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+
+    // make triangular alm info
+    unique_ptr<sharp_alm_info> ainfo =
+      set_triangular_alm_info (lmax, mmax);
+
+    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+    MR_assert (alm.size()==n_alm, "incorrect size of a_lm array"); 
+
+    size_t npix = 0;
+    for (size_t i = 0; i < ginfo->nrings(); ++i){;
+      npix += ginfo->nph(i);
+    }
+
+    long unsigned int nchunks;
+    long unsigned int chunksize;
+    get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+        nchunks,chunksize);
+
+    auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, unsigned(mmax)+1, 1});
+    auto phase_mav_a2p = to_mav<complex<double>, 3>(phase_a2p, true);
+
+    py::buffer_info buf = phase_a2p.request();
+    auto *ptr = static_cast<complex<double> *>(buf.ptr);
+
+    // for safety reasons 
+    for (size_t i = 0; i < 2*chunksize*(mmax+1)*1; ++i){
+      ptr[i] = std::complex<double>(0);
+    }
+
+    auto ar=alm.unchecked<1>();
+
+    sharp_alm2phase(&ar[0], phase_mav_a2p, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+    return phase_a2p;
+}
+
 a_c_c phase2alm_ginfo(sharp_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
@@ -371,9 +411,26 @@ a_c_c phase2alm_ginfo(sharp_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, siz
   int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
   a_c_c alm(n_alm);
   auto ar = alm.mutable_unchecked<1>();
-  auto phase_mav_p2a = to_mav<complex<double>, 3>(phase_p2a); // second param false or true ?
+  auto phase_mav_p2a = to_mav<complex<double>, 3>(phase_p2a, true); // second param false or true ?
 
   sharp_phase2alm(&ar[0], phase_mav_p2a, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  return alm;
+}
+
+a_c_c phase2alm_noweights_ginfo(sharp_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+  auto zb = zbounds.mutable_unchecked<1>();
+  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+  auto phase_mav_p2a = to_mav<complex<double>, 3>(phase_p2a, true); // second param false or true ?
+
+  sharp_phase2alm(&ar[0], phase_mav_p2a, *ginfo_new, *ainfo, 0, nthreads);
   return alm;
 }
 
@@ -390,7 +447,6 @@ a_d_c phase2map_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t 
     npix += ginfo->nph(i);
   }
 
-
   if (phase.shape(2) == 2){
     int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
     a_c_c alm(vector<size_t>{2, size_t(n_alm)});
@@ -404,6 +460,7 @@ a_d_c phase2map_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t 
     phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 2);
     return map;
   }
+
   int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
   a_c_c alm(n_alm);
   auto ar = alm.mutable_unchecked<1>();
@@ -417,6 +474,50 @@ a_d_c phase2map_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t 
   }
 
   phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
+  phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 0);
+  return map;
+}
+
+a_d_c phase2map_weights_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+  auto zb = zbounds.mutable_unchecked<1>();
+  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  size_t npix = 0;
+  for (size_t i = 0; i < ginfo->nrings(); ++i){;
+    npix += ginfo->nph(i);
+  }
+
+  if (phase.shape(2) == 2){
+    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+    a_c_c alm(vector<size_t>{2, size_t(n_alm)});
+    auto ar = alm.mutable_unchecked<2>();
+
+    auto phase_mav = to_mav<complex<double>, 3>(phase, true);
+    a_d_c map(vector<size_t>{2,size_t(npix)});
+    auto mr=map.mutable_unchecked<2>();
+
+    phase_job job(SHARP_Y, 2, {&ar(0, 0), &ar(1, 0)}, {&mr(0, 0), &mr(1, 0)}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+    phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 2);
+    return map;
+  }
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+  auto phase_mav = to_mav<complex<double>, 3>(phase, true);
+
+  a_d_c map(npix);
+  auto mr=map.mutable_unchecked<1>();
+
+  for (size_t i = 0; i < npix; ++i){
+    mr[i] = 0;
+  }
+
+  phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
   phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 0);
   return map;
 }
@@ -454,6 +555,43 @@ a_c_c map2phase_ginfo(sharp_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mm
   }
 
   phase_job job(SHARP_Yt, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  phase_execute_map2phase(job, phase_mav, *ginfo_new, mmax, 0);
+  return phase_m2p;
+}
+
+a_c_c map2phase_noweights_ginfo(sharp_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds,
+    py::object &out) {
+
+  auto zb = zbounds.mutable_unchecked<1>();
+  sharp_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, &zb[0]);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  auto mr=map.mutable_unchecked<1>();
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+
+
+  long unsigned int nchunks;
+  long unsigned int chunksize;
+  get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+      nchunks,chunksize);
+
+  auto phase_m2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, unsigned(mmax)+1, unsigned(map.ndim())});
+  auto phase_mav = to_mav<complex<double>, 3>(phase_m2p, true);
+
+  py::buffer_info buf = phase_m2p.request();
+  auto *ptr = static_cast<complex<double> *>(buf.ptr);
+
+  // for safety reasons
+  for (size_t i = 0; i < 2*chunksize*(mmax+1)*1; ++i){
+    ptr[i] = std::complex<double>(0);
+  }
+
+  phase_job job(SHARP_Yt, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
   phase_execute_map2phase(job, phase_mav, *ginfo_new, mmax, 0);
   return phase_m2p;
 }
@@ -550,6 +688,7 @@ PYBIND11_MODULE(scarf, m) {
     .def("sth", &sharp_geom_info::sth, "iring"_a)
     .def("phi0", &sharp_geom_info::phi0, "iring"_a)
     .def("pair", &sharp_geom_info::pair, "iring"_a)
+    .def("weight", &sharp_geom_info::weight, "iring"_a)
     .def("clear_map", &sharp_geom_info::clear_map, "map"_a)
     .def("get_ring", &sharp_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
     .def("add_ring", &sharp_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
@@ -561,6 +700,10 @@ PYBIND11_MODULE(scarf, m) {
     .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("map2phase_noweights", &map2phase_noweights_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("phase2map_weights", &phase2map_weights_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
+    .def("alm2phase_weights", &alm2phase_weights_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("phase2alm_noweights", &phase2alm_noweights_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
     .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 

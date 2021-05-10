@@ -15,7 +15,7 @@ static size_t new_nchunks_max=1;
 
 static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize)
   {
-  size_t chunksize_min = 10000;
+  size_t chunksize_min = 10;
   chunksize = (ndata+new_nchunks_max-1)/new_nchunks_max;
   if (chunksize>=chunksize_min) // use max number of chunks
     chunksize = ((chunksize+nmult-1)/nmult)*nmult;
@@ -126,8 +126,9 @@ template<typename T> void phase_execute (sharp_jobtype type, size_t spin, const 
     phase_job job(type, spin, alm, {&dummy_map[0], &dummy_map_spin[0]}, phase, geom_info, alm_info, flags, nthreads);
     job.execute();
   }
-
 }
+
+  
 
 template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T>, 3> &phase,
     sharp_geom_info &geom_info, int mmax, int spin)
@@ -154,7 +155,21 @@ template<typename T> void phase_execute_map2phase (phase_job &job, mav<complex<T
       size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());
       job.map2phase(mmax, llim, ulim, phase);
     }
+
+    double factor; 
+    for (size_t xi = 0; xi < geom_info.nrings(); ++xi){
+      factor = geom_info.nph(xi)*geom_info.weight(xi);
+      for (int yi = 0; yi < mmax+1; ++yi){
+        for (size_t zi = 0; zi < (1 + (spin > 0)); ++zi){
+          phase.v(xi, yi, zi) = complex<double>(
+              phase(xi, yi, zi).real()/factor,
+              phase(xi, yi, zi).imag()/factor
+              );
+        }
+      }
+    }
   }
+
 
 template<typename T> void sharp_alm2phase(const std::complex<T> *alm, mav<complex<T>, 3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
@@ -184,14 +199,44 @@ template<typename T> void sharp_phase2alm(std::complex<T> *alm, mav<complex<doub
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Yt, 0, {alm}, phase, geom_info, alm_info, flags, nthreads);
+
+  double factor; 
+  
+  auto new_phase = mav<dcmplx,3>::build_noncritical({phase.shape(0),phase.shape(1),phase.shape(2)});
+  for (size_t xi = 0; xi < geom_info.nrings(); ++xi){
+    factor = geom_info.nph(xi)*geom_info.weight(xi);
+    for (size_t yi = 0; yi < phase.shape(1); ++yi){
+      for (size_t zi = 0; zi < phase.shape(2); ++zi){
+        new_phase.v(xi, yi, zi) = complex<double>(
+            phase(xi, yi, zi).real()*factor,
+            phase(xi, yi, zi).imag()*factor
+            );
+      }
+    }
+  }
+
+  phase_execute(SHARP_Yt, 0, {alm}, new_phase, geom_info, alm_info, flags, nthreads);
   }
 template<typename T> void sharp_phase2alm_spin(size_t spin, std::complex<T> *alm1, std::complex<T> *alm2, mav<complex<T>, 3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Yt, spin, {alm1, alm2}, phase, geom_info, alm_info, flags, nthreads);
+
+  auto new_phase = mav<dcmplx,3>::build_noncritical({phase.shape(0),phase.shape(1),phase.shape(2)});
+  double factor; 
+  for (size_t xi = 0; xi < geom_info.nrings(); ++xi){
+    factor = geom_info.nph(xi)*geom_info.weight(xi);
+    for (size_t yi = 0; yi < phase.shape(1); ++yi){
+      for (size_t zi = 0; zi < phase.shape(2); ++zi){
+        new_phase.v(xi, yi, zi) = complex<double>(
+            phase(xi, yi, zi).real()*factor,
+            phase(xi, yi, zi).imag()*factor
+            );
+      }
+    }
   }
+  phase_execute(SHARP_Yt, spin, {alm1, alm2}, new_phase, geom_info, alm_info, flags, nthreads);
+}
 
 }
 }
