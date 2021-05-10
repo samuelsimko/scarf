@@ -645,6 +645,13 @@ a_c_c phase2alm_spin_ginfo(sharp_geom_info *ginfo, a_c_c &phase, size_t spin, si
   return alm;
 }
 
+sharp_geom_info * gauss_geometry(int64_t nrings, int64_t nphi)
+      {
+      MR_assert((nrings>0)&&(nphi>0),"bad grid dimensions");
+      sharp_geom_info * ginfo = sharp_make_2d_geom_info (nrings, nphi, 0., 1, nphi, "GL").release();
+      return ginfo;
+      }
+
 /* binders */
 
 using namespace pybind11;
@@ -719,7 +726,23 @@ PYBIND11_MODULE(scarf, m) {
 
   Returns
   -------
-  geom : Geometry
+  Geometry
     A Scarf geometry following the HEALPix scheme
+  )pbdoc", "nside"_a, "stride"_a);
+
+  m.def("gauss_geometry", &gauss_geometry, R"pbdoc(
+  Creates a gauss geometry given nrings and nphi.
+
+  Parameters
+  ----------
+  nrings : int, scalar
+    The number of rings of the geometry
+  nphi: int, scalar
+    The number of pixels in each ring
+
+  Returns
+  -------
+  Geometry
+    A Scarf geometry following the gauss scheme
   )pbdoc", "nside"_a, "stride"_a);
 }
