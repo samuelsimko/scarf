@@ -1,30 +1,3 @@
-/*
- *  This file is part of libsharp2.
- *
- *  libsharp2 is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  libsharp2 is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with libsharp2; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
-/* libsharp2 is being developed at the Max-Planck-Institut fuer Astrophysik */
-
-/*! \file sharp_internal.h
- *  Internally used functionality for the spherical transform library.
- *
- *  Copyright (C) 2006-2020 Max-Planck-Society
- *  \author Martin Reinecke \author Dag Sverre Seljebotn
- */
-
 #include <complex>
 #include <vector>
 #include "ducc0/sharp/sharp.h"
@@ -42,6 +15,7 @@ static size_t new_nchunks_max=1;
 
 static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize)
   {
+  size_t chunksize_min = 10000;
   chunksize = (ndata+new_nchunks_max-1)/new_nchunks_max;
   if (chunksize>=chunksize_min) // use max number of chunks
     chunksize = ((chunksize+nmult-1)/nmult)*nmult;
@@ -143,10 +117,17 @@ template<typename T> void phase_execute (sharp_jobtype type, size_t spin, const 
   for (size_t i = 0; i < geom_info.nrings(); ++i){;
     npix += geom_info.nph(i);
   }
-  std::vector<double> dummy_map(npix, 0);
-  phase_job job(type, spin, alm, {&dummy_map[0]}, phase, geom_info, alm_info, flags, nthreads);
-  job.execute();
+  vector<double> dummy_map(npix, 0);
+  if (spin==0){
+    phase_job job(type, spin, alm, {&dummy_map[0]}, phase, geom_info, alm_info, flags, nthreads);
+    job.execute();
+  } else {
+    vector<double> dummy_map_spin(npix, 0);
+    phase_job job(type, spin, alm, {&dummy_map[0], &dummy_map_spin[0]}, phase, geom_info, alm_info, flags, nthreads);
+    job.execute();
   }
+
+}
 
 template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T>, 3> &phase,
     sharp_geom_info &geom_info, int mmax, int spin)
@@ -154,9 +135,10 @@ template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T
    size_t nchunks, chunksize;
    get_singular_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
        nchunks,chunksize);
+
    for (size_t chunk=0; chunk<nchunks; ++chunk){
      size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());
-     //job.init_output();
+     job.init_output();
      job.phase2map(mmax, llim, ulim, phase);
     }
   }
@@ -184,19 +166,19 @@ template<typename T> void sharp_alm2phase_adjoint(std::complex<T> *alm, mav<comp
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Y, 0, {alm}, {phase}, geom_info, alm_info, flags, nthreads);
+  phase_execute(SHARP_Y, 0, {alm}, phase, geom_info, alm_info, flags, nthreads);
   }
-template<typename T> void sharp_alm2phase_spin(size_t spin, const std::complex<T> *alm1, const std::complex<T> *alm2, mav<complex<T>, 3> &phase1, mav<complex<T>, 3> &phase2,
+template<typename T> void sharp_alm2phase_spin(size_t spin, const std::complex<T> *alm1, const std::complex<T> *alm2, mav<complex<T>, 3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Yt, spin, {alm1, alm2}, {phase1, phase2}, geom_info, alm_info, flags, nthreads);
+  phase_execute(SHARP_Y, spin, {alm1, alm2}, phase, geom_info, alm_info, flags, nthreads);
   }
-template<typename T> void sharp_alm2phase_spin_adjoint(size_t spin, std::complex<T> *alm1, std::complex<T> *alm2, mav<complex<T>, 3> &phase1, mav<complex<T>, 3> &phase2,
+template<typename T> void sharp_alm2phase_spin_adjoint(size_t spin, std::complex<T> *alm1, std::complex<T> *alm2, mav<complex<T>, 3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Yt, spin, {alm1, alm2}, {phase1, phase2}, geom_info, alm_info, flags, nthreads);
+  phase_execute(SHARP_Yt, spin, {alm1, alm2}, phase, geom_info, alm_info, flags, nthreads);
   }
 template<typename T> void sharp_phase2alm(std::complex<T> *alm, mav<complex<double>,3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
@@ -204,11 +186,11 @@ template<typename T> void sharp_phase2alm(std::complex<T> *alm, mav<complex<doub
   {
   phase_execute(SHARP_Yt, 0, {alm}, phase, geom_info, alm_info, flags, nthreads);
   }
-template<typename T> void sharp_phase2alm_spin(size_t spin, std::complex<T> *alm1, std::complex<T> *alm2, mav<complex<T>, 3> &phase1, mav<complex<T>, 3> &phase2,
+template<typename T> void sharp_phase2alm_spin(size_t spin, std::complex<T> *alm1, std::complex<T> *alm2, mav<complex<T>, 3> &phase,
   const sharp_geom_info &geom_info, const sharp_alm_info &alm_info,
   size_t flags, int nthreads=1)
   {
-  phase_execute(SHARP_Yt, spin, {alm1, alm2}, {phase1, phase2}, geom_info, alm_info, flags, nthreads);
+  phase_execute(SHARP_Yt, spin, {alm1, alm2}, phase, geom_info, alm_info, flags, nthreads);
   }
 
 }
