@@ -105,8 +105,7 @@ a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, opt
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? keep_rings_in_zbounds(*ginfo, zbounds)
-    : ginfo;
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -127,8 +126,7 @@ a_c_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int6
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? keep_rings_in_zbounds(*ginfo, zbounds)
-    : ginfo;
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -155,8 +153,7 @@ a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? keep_rings_in_zbounds(*ginfo, zbounds)
-    : ginfo;
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -187,8 +184,7 @@ a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int6
     const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, a_d &zbounds){
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? keep_rings_in_zbounds(*ginfo, zbounds)
-    : ginfo;
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
