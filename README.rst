@@ -99,3 +99,16 @@ For Developer
 -------------
 
 
+
+
+The Python binder creates and installs a new scarf package onto your machine by creating a shared resource (.so), thus,
+
+.. code-block:: console
+
+   pip install --user --editable .
+
+won't apply changes directly to the scarf package, as one needs to update the .so file.
+To do so,
+
+   * Save any changes you have made to the code,
+   * ``pip install --user .``

@@ -186,7 +186,6 @@ sharp_geom_info * keep_rings_in_zbounds(sharp_geom_info &ginfo, double * zbounds
 }
 
 
-
 a_c_c map2alm_ginfo(sharp_geom_info *ginfo, a_d_c map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
   auto zb = zbounds.mutable_unchecked<1>();
