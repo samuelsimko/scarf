@@ -244,6 +244,28 @@ a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const in
   return alm2map_spin_ginfo(ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
   }
 
+py::array GL_wg(size_t n)
+  {
+  auto res = make_Pyarr<double>({n});
+  auto res2 = to_mav<double,1>(res, true);
+  GL_Integrator integ(n);
+  auto wgt = integ.weights();
+  for (size_t i=0; i<res2.shape(0); ++i)
+    res2.v(i) = wgt[i];
+  return move(res);
+  }
+
+py::array GL_xg(size_t n)
+  {
+  auto res = make_Pyarr<double>({n});
+  auto res2 = to_mav<double,1>(res, true);
+  GL_Integrator integ(n);
+  auto x = integ.coords();
+  for (size_t i=0; i<res2.shape(0); ++i)
+    res2.v(i) = -x[i];
+  return move(res);
+  }
+
 
 /* binders */
 
@@ -354,6 +376,32 @@ PYBIND11_MODULE(scarf, m) {
     Temperature map
   )pbdoc", "alm"_a, "spin"_a, "nside"_a, 
           "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+
+  m.def("GL_wg", &GL_wg,  R"pbdoc(
+  Computes Gauss-Legendre quadrature weights.
+
+  Parameters
+  ----------
+  n: int, scalar
+    The number of GL sample points used (integrates exactly degree :math:`2n - 1` polynomials; typically :math:`n=\ell_{\rm max} + 1`)
+
+  Returns
+  -------
+  np.array, shape (:math:`n`)
+  )pbdoc","n"_a);
+
+  m.def("GL_xg", &GL_xg,  R"pbdoc(
+  Computes Gauss-Legendre quadrature sample points. Output is ordered from 1 to -1.
+
+  Parameters
+  ----------
+  n: int, scalar
+    The number of GL sample points used (integrates exactly degree :math:`2n - 1` polynomials; typically :math:`n=\ell_{\rm max} + 1`)
+
+  Returns
+  -------
+  np.array, shape (:math:`n`)
+  )pbdoc","n"_a);
 
   py::class_<sharp_standard_geom_info>(m ,"Geometry", R"pbdoc(
   Creates a geometry specified by the user.
@@ -487,6 +535,20 @@ PYBIND11_MODULE(scarf, m) {
     -------
     double
       The weight of the ring. 
+      
+    )pbdoc", "iring"_a)
+    .def("get_ofs", &sharp_standard_geom_info::ofs,  R"pbdoc(
+    Returns the pixel offset of the specified ring.
+
+    Parameters
+    ----------
+    iring: int
+      The identifier of the ring.
+
+    Returns
+    -------
+    int
+      The pixel offset of the ring. 
       
     )pbdoc", "iring"_a)
     .def_readwrite("theta", &sharp_standard_geom_info::theta_array)
