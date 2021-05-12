@@ -7,6 +7,18 @@
 Scarf
 ==================
 
+.. image:: https://github.com/samuelsimko/scarf/workflows/CI/badge.svg
+   :target: https://github.com/samuelsimko/scarf/actions
+
+.. image:: https://readthedocs.org/projects/scarfcmb/badge/?version=latest
+   :target: https://readthedocs.org/projects/scarfcmb/?badge=latest
+
+.. image:: https://img.shields.io/badge/licence-MIT-brightgreen
+   :target: https://github.com/samuelsimko/scarf/blob/master/LICENSE
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/psf/black
+
 
 About
 -----
