@@ -342,7 +342,7 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
     npix += ginfo->nph(i);
   }
 
-  if (phase.shape(2) == 2){
+  if (phase.shape(0) == 2){
     int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
     a_c_c alm(vector<size_t>{2, size_t(n_alm)});
     auto ar = alm.mutable_unchecked<2>();
