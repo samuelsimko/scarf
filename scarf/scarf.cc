@@ -65,6 +65,17 @@ sharp_standard_geom_info* GeometryInformation(size_t nrings, a_s &nph, a_li &ofs
   return temp_p.release();
 }
 
+// Returns a new ssgi with identical attributes.
+sharp_standard_geom_info* duplicate_ssgi(sharp_standard_geom_info *ginfo){
+  auto nph_p = ginfo->nph_array.unchecked<1>();
+  auto ofs_p = ginfo->ofs_array.unchecked<1>();
+  auto phi0_p = ginfo->phi0_array.unchecked<1>();
+  auto theta_p = ginfo->theta_array.unchecked<1>();
+  auto wgt_p = ginfo->weight_array.unchecked<1>();
+  auto temp_p = make_unique<sharp_standard_geom_info>(ginfo->nrings(), &nph_p[0], &ofs_p[0], ginfo->stride, &phi0_p[0], &theta_p[0], &wgt_p[0]);
+  return temp_p.release();
+}
+
 // creates a new geometry info, keeping the rings only in zbounds
 sharp_standard_geom_info * keep_rings_in_zbounds(sharp_standard_geom_info &ginfo, a_d &zbounds){
 
@@ -103,7 +114,7 @@ a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, opt
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -124,7 +135,7 @@ a_c_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int6
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -151,7 +162,7 @@ a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -182,7 +193,7 @@ a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int6
     const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, a_d &zbounds){
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -265,7 +276,7 @@ py::array GL_xg(size_t n)
 a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
       const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
 
-    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -305,7 +316,7 @@ a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const i
 
 a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -321,7 +332,7 @@ a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t 
 
 a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -365,7 +376,7 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
 a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds,
     py::object &out) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -401,7 +412,7 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
 a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const size_t spin, const int64_t lmax,
      const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
 
-    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -432,7 +443,7 @@ a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, co
 
 a_c_c phase2alm_spin_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t spin, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
