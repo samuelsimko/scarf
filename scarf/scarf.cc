@@ -31,7 +31,7 @@
 #include "ducc0/infra/error_handling.h"
 #include "ducc0/math/constants.h"
 
-// #include "phase.h"
+#include "phase.h"
 
 using namespace ducc0;
 using namespace std;
@@ -98,8 +98,6 @@ sharp_standard_geom_info * keep_rings_in_zbounds(sharp_standard_geom_info &ginfo
 sharp_standard_geom_info * sharp_make_standard_healpix_geom_info(size_t nside, size_t stride){
   return sharp_make_healpix_geom_info(nside, stride).release();
 }
-
-
 
 a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, optional<size_t> mmax_opt, size_t nthreads, a_d &zbounds) {
 
@@ -262,6 +260,198 @@ py::array GL_xg(size_t n)
   return move(res);
   }
 
+/* phase functions */
+
+a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
+      const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
+
+    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+    // make triangular alm info
+    unique_ptr<sharp_alm_info> ainfo =
+      set_triangular_alm_info (lmax, mmax);
+
+    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+    MR_assert (alm.size()==n_alm, "incorrect size of a_lm array"); 
+
+    size_t npix = 0;
+    for (size_t i = 0; i < ginfo->nrings(); ++i){;
+      npix += ginfo->nph(i);
+    }
+
+    long unsigned int nchunks;
+    long unsigned int chunksize;
+    get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+        nchunks,chunksize);
+
+    // auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, unsigned(mmax)+1, 1});
+    auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {1, 2*chunksize, unsigned(mmax)+1});
+    auto phase_mav_a2p = to_mav<complex<double>, 3>(phase_a2p, true);
+
+    py::buffer_info buf = phase_a2p.request();
+    auto *ptr = static_cast<complex<double> *>(buf.ptr);
+
+    // for safety reasons 
+    for (size_t i = 0; i < 2*chunksize*(mmax+1)*1; ++i){
+      ptr[i] = std::complex<double>(0);
+    }
+
+    auto ar=alm.unchecked<1>();
+
+    sharp_alm2phase(&ar[0], phase_mav_a2p, *ginfo_new, *ainfo, 0, nthreads);
+    return phase_a2p;
+}
+
+
+a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+  auto phase_mav_p2a = to_mav<complex<double>, 3>(phase_p2a, true); // second param false or true ?
+
+  sharp_phase2alm(&ar[0], phase_mav_p2a, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  return alm;
+}
+
+a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  size_t npix = 0;
+  for (size_t i = 0; i < ginfo->nrings(); ++i){;
+    npix += ginfo->nph(i);
+  }
+
+  if (phase.shape(2) == 2){
+    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+    a_c_c alm(vector<size_t>{2, size_t(n_alm)});
+    auto ar = alm.mutable_unchecked<2>();
+
+    auto phase_mav = to_mav<complex<double>, 3>(phase, true);
+    a_d_c map(vector<size_t>{2,size_t(npix)});
+    auto mr=map.mutable_unchecked<2>();
+
+    phase_job job(SHARP_Y, 2, {&ar(0, 0), &ar(1, 0)}, {&mr(0, 0), &mr(1, 0)}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
+    phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 2);
+    return map;
+  }
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+  auto phase_mav = to_mav<complex<double>, 3>(phase, true);
+
+  a_d_c map(npix);
+  auto mr=map.mutable_unchecked<1>();
+
+  for (size_t i = 0; i < npix; ++i){
+    mr[i] = 0;
+  }
+
+  phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
+  phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 0);
+  return map;
+}
+
+a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds,
+    py::object &out) {
+
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  auto mr=map.mutable_unchecked<1>();
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(n_alm);
+  auto ar = alm.mutable_unchecked<1>();
+
+
+  long unsigned int nchunks;
+  long unsigned int chunksize;
+  get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+      nchunks,chunksize);
+
+  auto phase_m2p = get_optional_Pyarr<complex<double>>(out, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
+  auto phase_mav = to_mav<complex<double>, 3>(phase_m2p, true);
+
+  py::buffer_info buf = phase_m2p.request();
+  auto *ptr = static_cast<complex<double> *>(buf.ptr);
+
+  // for safety reasons
+  for (size_t i = 0; i < 2*chunksize*(mmax+1)*1; ++i){
+    ptr[i] = std::complex<double>(0);
+  }
+
+  phase_job job(SHARP_Yt, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  phase_execute_map2phase(job, phase_mav, *ginfo_new, mmax, 0);
+  return phase_m2p;
+}
+
+a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const size_t spin, const int64_t lmax,
+     const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
+
+    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+    // make triangular alm info
+    unique_ptr<sharp_alm_info> ainfo =
+      set_triangular_alm_info (lmax, mmax);
+
+    int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+
+    size_t npix = 0;
+    for (size_t i = 0; i < ginfo->nrings(); ++i){;
+      npix += ginfo->nph(i);
+    }
+
+    long unsigned int nchunks;
+    long unsigned int chunksize;
+    get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
+        nchunks,chunksize);
+
+    auto phase = get_optional_Pyarr<complex<double>>(out, {2*chunksize, unsigned(mmax)+1, 2});
+    auto phase_mav = to_mav<complex<double>, 3>(phase, true);
+
+    auto ar=alm.unchecked<2>();
+    MR_assert((ar.shape(0)==2)&&(ar.shape(1)==n_alm),
+      "incorrect size of a_lm array");
+
+    sharp_alm2phase_spin(spin, &ar(0, 0), &ar(1, 0), phase_mav, *ginfo_new, *ainfo, 0, nthreads);
+    return phase;
+}
+
+a_c_c phase2alm_spin_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t spin, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+
+  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? ginfo : keep_rings_in_zbounds(*ginfo, zbounds);
+
+  unique_ptr<sharp_alm_info> ainfo =
+    set_triangular_alm_info (lmax, mmax);
+
+  int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
+  a_c_c alm(vector<size_t>{2,size_t(n_alm)});
+  auto ar = alm.mutable_unchecked<2>();
+  auto phase_mav = to_mav<complex<double>, 3>(phase);
+
+  sharp_phase2alm_spin(spin, &ar(0, 0), &ar(1, 0), phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  return alm;
+}
+
+sharp_standard_geom_info * gauss_geometry(int64_t nrings, int64_t nphi)
+      {
+      MR_assert((nrings>0)&&(nphi>0),"bad grid dimensions");
+      sharp_standard_geom_info * ginfo = sharp_make_2d_geom_info (nrings, nphi, 0., 1, nphi, "GL").release();
+      return ginfo;
+      }
 
 /* binders */
 
@@ -560,9 +750,16 @@ PYBIND11_MODULE(scarf, m) {
     .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
-    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
+    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
+    .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
+    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
-  m.def("healpix_geometry", &sharp_make_standard_healpix_geom_info, R"pbdoc(
+
+  m.def("healpix_geometry", &sharp_make_healpix_geom_info, R"pbdoc(
   Creates a HEALPix geometry given the nside.
 
   Parameters
@@ -578,4 +775,19 @@ PYBIND11_MODULE(scarf, m) {
     A Scarf geometry following the HEALPix scheme
   )pbdoc", "nside"_a, "stride"_a);
 
+  m.def("gauss_geometry", &gauss_geometry, R"pbdoc(
+  Creates a gauss geometry given nrings and nphi.
+
+  Parameters
+  ----------
+  nrings : int, scalar
+    The number of rings of the geometry
+  nphi: int, scalar
+    The number of pixels in each ring
+
+  Returns
+  -------
+  Geometry
+    A Scarf geometry following the gauss scheme
+  )pbdoc", "nside"_a, "stride"_a);
 }
