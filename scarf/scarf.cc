@@ -110,11 +110,13 @@ sharp_standard_geom_info * sharp_make_standard_healpix_geom_info(size_t nside, s
   return sharp_make_healpix_geom_info(nside, stride).release();
 }
 
-a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, optional<size_t> mmax_opt, size_t nthreads, a_d &zbounds) {
+
+a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, optional<size_t> mmax_opt, size_t nthreads, optional<a_d> zbounds) {
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -130,12 +132,13 @@ a_c_c map2alm_ginfo(sharp_standard_geom_info *ginfo, a_d_c map, size_t lmax, opt
 }
 
 a_c_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int64_t spin,
-    const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, a_d &zbounds) {
+    const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, optional<a_d> zbounds) {
 
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -158,11 +161,14 @@ a_c_c map2alm_spin_ginfo(sharp_standard_geom_info *ginfo, const a_d_c &map, int6
 }
 
 a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
-      optional<int64_t> mmax_opt, const int nthreads, a_d &zbounds){
+      optional<int64_t> mmax_opt, const int nthreads, optional<a_d> zbounds){
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -190,10 +196,13 @@ a_d_c alm2map_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int
 }
 
 a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int64_t spin,
-    const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, a_d &zbounds){
+    const int64_t lmax, optional<int64_t> mmax_opt, const int nthreads, optional<a_d> zbounds){
 
   size_t mmax =  (mmax_opt.has_value()) ? mmax_opt.value() : lmax;
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
   // make triangular alm info
   unique_ptr<sharp_alm_info> ainfo =
@@ -216,7 +225,7 @@ a_d_c alm2map_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, int6
   }
 
 a_c_c map2alm(const a_d_c &map, const int64_t lmax,
-    const optional<int64_t> mmax, const int nthreads, a_d &zbounds) {
+    const optional<int64_t> mmax, const int nthreads, const optional<a_d> &zbounds) {
 
     const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
     const int64_t nside = (int) sqrt(npix/12);
@@ -226,7 +235,7 @@ a_c_c map2alm(const a_d_c &map, const int64_t lmax,
 }
 
 a_c_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t lmax,
-    const optional<int64_t> mmax, const int nthreads, a_d &zbounds) {
+    const optional<int64_t> mmax, const int nthreads, optional<a_d> zbounds) {
 
     const int64_t npix = map.ndim() == 1 ? map.size() : map.shape(1);
     const int64_t nside = (int) sqrt(npix/12);
@@ -235,7 +244,7 @@ a_c_c map2alm_spin(const a_d_c &map, int64_t spin, const int64_t lmax,
 }
 
 a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
-    const optional<int64_t> mmax, const int nthreads, a_d &zbounds){
+    const optional<int64_t> mmax, const int nthreads, optional<a_d> zbounds){
 
     sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
     return alm2map_ginfo(ginfo, alm, lmax, mmax, nthreads, zbounds);
@@ -243,7 +252,7 @@ a_d_c alm2map(const a_c_c &alm, const int64_t nside, const int64_t lmax,
 
 
 a_d_c alm2map_spin(const a_c_c &alm, int64_t spin, const int64_t nside, const int64_t lmax,
-    const optional<int64_t> mmax, const int nthreads, a_d &zbounds){
+    const optional<int64_t> mmax, const int nthreads, optional<a_d> zbounds){
 
   sharp_standard_geom_info *ginfo = sharp_make_healpix_geom_info(nside, 1).release();
   return alm2map_spin_ginfo(ginfo, alm, spin, lmax, mmax, nthreads, zbounds);
@@ -274,9 +283,12 @@ py::array GL_xg(size_t n)
 /* phase functions */
 
 a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
-      const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
+      const int64_t mmax, const int nthreads, optional<a_d> zbounds, py::object &out){
 
-    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+    a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+
+    sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -314,9 +326,12 @@ a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const i
 }
 
 
-a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -330,9 +345,11 @@ a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t 
   return alm;
 }
 
-a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -373,10 +390,11 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
   return map;
 }
 
-a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds,
+a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds,
     py::object &out) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -410,9 +428,10 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
 }
 
 a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const size_t spin, const int64_t lmax,
-     const int64_t mmax, const int nthreads, a_d &zbounds, py::object &out){
+     const int64_t mmax, const int nthreads, optional<a_d> zbounds, py::object &out){
 
-    sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
     // make triangular alm info
     unique_ptr<sharp_alm_info> ainfo =
@@ -441,9 +460,11 @@ a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, co
     return phase;
 }
 
-a_c_c phase2alm_spin_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t spin, size_t lmax, size_t mmax, size_t nthreads, a_d &zbounds) {
+a_c_c phase2alm_spin_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t spin, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds) {
 
-  sharp_standard_geom_info *ginfo_new = (zbounds.is_none()) ? duplicate_ssgi(ginfo) : keep_rings_in_zbounds(*ginfo, zbounds);
+  a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
+  sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
+
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -464,7 +485,20 @@ sharp_standard_geom_info * gauss_geometry(int64_t nrings, int64_t nphi)
       return ginfo;
       }
 
-/* binders */
+/*
+vector<long int> zb_default_v({-1, 1});
+auto zb_default = a_li(py::buffer_info(
+  &zb_default_v[0], // pointer to data
+  sizeof(long int),
+  py::format_descriptor<long int>::format(),
+  1, // ndim
+  {2}, // size
+  {sizeof(long int)} // stride (size of struct Tring)
+), py::handle(py::none()));
+*/
+
+optional<long int> opt_int;
+optional<a_d> opt_zb;
 
 using namespace pybind11;
 PYBIND11_MODULE(scarf, m) {
@@ -494,7 +528,7 @@ PYBIND11_MODULE(scarf, m) {
   -------
   np.array, shape (:math:`N_{alm}`)
     Temperature alm
-  )pbdoc", "map"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+  )pbdoc", "map"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb);
 
 
   m.def("map2alm_spin", &map2alm_spin, R"pbdoc(
@@ -520,7 +554,7 @@ PYBIND11_MODULE(scarf, m) {
   np.array, shape (:math:`N_{alm}`)
     Polarisation alm
   )pbdoc", "map"_a, "spin"_a, "lmax"_a,
-                   "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+                   "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb);
 
   m.def("alm2map", &alm2map, R"pbdoc(
   Computes a Healpix temperature map from alm.
@@ -545,7 +579,7 @@ PYBIND11_MODULE(scarf, m) {
   np.array, shape (:math:`N_{pix}`)
     Temperature map
   )pbdoc", "alm"_a, "nside"_a, "lmax"_a,
-                   "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+                   "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb);
 
   m.def("alm2map_spin", &alm2map_spin, R"pbdoc(
   Computes a Healpix polarisation map from alm.
@@ -572,7 +606,7 @@ PYBIND11_MODULE(scarf, m) {
   np.array, shape (:math:`N_{pix}`)
     Temperature map
   )pbdoc", "alm"_a, "spin"_a, "nside"_a, 
-          "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none());
+          "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb);
 
   m.def("GL_wg", &GL_wg,  R"pbdoc(
   Computes Gauss-Legendre quadrature weights.
@@ -758,15 +792,15 @@ PYBIND11_MODULE(scarf, m) {
     //.def("pair", &sharp_standard_geom_info::pair, "iring"_a)
     //.def("get_ring", &sharp_standard_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
     //.def("add_ring", &sharp_standard_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
-    .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
-    .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
-    .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
-    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=py::none(), "nthreads"_a=1, "zbounds"_a=py::none())
-    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+    .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+    .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
     .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
     .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
-    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
-    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=py::none())
+    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
+    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
     .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
 
 
