@@ -108,7 +108,3 @@ def test_map2phase2map():
     map_from_phase = geom.phase2map(phase_from_map, lmax, mmax, 10, [-1, 1])
 
     assert np.linalg.norm(map - map_from_phase) < 1e-7
-
-
-print("zero")
-test_map2phase2alm_spin()
