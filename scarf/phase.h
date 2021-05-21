@@ -1,6 +1,6 @@
 #include <complex>
 #include <vector>
-#include "ducc0/sharp/sharp.h"
+#include "ducc0/sht/sharp.h"
 #include "ducc0/infra/error_handling.h"
 #include "ducc0/infra/mav.h"
 
@@ -13,11 +13,11 @@ using std::complex;
 
 static size_t new_nchunks_max=1;
 
-static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize)
+static void get_singular_chunk_info (size_t ndata, size_t nmult, size_t &nchunks, size_t &chunksize, size_t spin=1)
   {
   size_t chunksize_min = 10;
   chunksize = ndata;
-  nchunks=1;
+  nchunks= 1;
   /*
   chunksize = (ndata+new_nchunks_max-1)/new_nchunks_max;
   if (chunksize>=chunksize_min) // use max number of chunks
@@ -139,7 +139,7 @@ template<typename T> void phase_execute_phase2map (phase_job &job, mav<complex<T
   {
    size_t nchunks, chunksize;
    get_singular_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
-       nchunks,chunksize);
+       nchunks,chunksize, spin);
 
    for (size_t chunk=0; chunk<nchunks; ++chunk){
      size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());
@@ -153,7 +153,7 @@ template<typename T> void phase_execute_map2phase (phase_job &job, mav<complex<T
   {
     size_t nchunks, chunksize;
     get_singular_chunk_info(geom_info.npairs(), (spin==0) ? 128 : 64, 
-        nchunks,chunksize);
+        nchunks,chunksize, spin);
 
     for (size_t chunk=0; chunk<nchunks; ++chunk){
       size_t llim=chunk*chunksize, ulim=min(llim+chunksize,geom_info.npairs());

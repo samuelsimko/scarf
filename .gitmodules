@@ -1,4 +1,4 @@
 [submodule "ducc"]
 	path = ducc
 	url = https://github.com/NextGenCMB/ducc/
-	branch = scarf
+	branch = feature/scarf_with_latest_ducc

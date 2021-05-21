@@ -14,7 +14,7 @@ def test_map2alm():
     lmax = nside
     m = np.random.random(12 * nside ** 2)
     hp_alm = hp.sphtfunc.map2alm(m, lmax, iter=0, verbose=False)
-    scarf_alm = scarf.map2alm(m, lmax, lmax, 1, [-1, 1])
+    scarf_alm = scarf.map2alm(m, lmax)
     assert np.linalg.norm(hp_alm - scarf_alm) < 1e-7
 
 
@@ -23,7 +23,7 @@ def test_alm2map():
     lmax = nside
     alm = np.random.random(hp.Alm.getsize(lmax)).astype(np.complex)
     hp_map = hp.sphtfunc.alm2map(alm, nside, lmax, verbose=False)
-    scarf_map = scarf.alm2map(alm, nside, lmax, lmax, 1, [-1, 1])
+    scarf_map = scarf.alm2map(alm, nside, lmax, lmax, 1)
     assert np.linalg.norm(hp_map - scarf_map) < 1e-7
 
 
@@ -38,9 +38,7 @@ def test_alm2map_spin():
         [almt, alme, almb], nside, lmax, pol=True, verbose=False
     )
     scarf_t = scarf.alm2map(almt, nside, lmax, lmax, 1, [-1, 1])
-    [scarf_q, scarf_u] = scarf.alm2map_spin(
-        [alme, almb], 2, nside, lmax, lmax, 1, [-1, 1]
-    )
+    [scarf_q, scarf_u] = scarf.alm2map_spin([alme, almb], 2, nside, lmax, lmax, 1)
     assert np.linalg.norm(hp_map - [scarf_t, scarf_q, scarf_u]) < 1e-7
 
 
