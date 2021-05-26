@@ -335,8 +335,8 @@ a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t 
 
   sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
-  long unsigned int newshape[3] = {1, phase_p2a.shape(0), phase_p2a.shape(1)};
-  long unsigned int oldshape[2] = {phase_p2a.shape(0), phase_p2a.shape(1)};
+  long unsigned int newshape[3] = {1, unsigned(phase_p2a.shape(0)), unsigned(phase_p2a.shape(1))};
+  long unsigned int oldshape[2] = {unsigned(phase_p2a.shape(0)), unsigned(phase_p2a.shape(1))};
   phase_p2a.resize(newshape);
 
   unique_ptr<sharp_alm_info> ainfo =
@@ -381,8 +381,8 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
     return map;
   }
 
-  long unsigned int newshape[3] = {1, phase.shape(0), phase.shape(1)};
-  long unsigned int oldshape[2] = {phase.shape(0), phase.shape(1)};
+  long unsigned int newshape[3] = {1, unsigned(phase.shape(0)), unsigned(phase.shape(1))};
+  long unsigned int oldshape[2] = {unsigned(phase.shape(0)), unsigned(phase.shape(1))};
   phase.resize(newshape);
 
   int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
