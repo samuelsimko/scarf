@@ -58,14 +58,6 @@ def test_attributes():
         < 1e-7
     )
     assert (
-        np.linalg.norm(g.cth - [g.get_cth(iring) for iring in range(0, g.get_nrings())])
-        < 1e-7
-    )
-    assert (
-        np.linalg.norm(g.sth - [g.get_sth(iring) for iring in range(0, g.get_nrings())])
-        < 1e-7
-    )
-    assert (
         np.linalg.norm(g.nph - [g.get_nph(iring) for iring in range(0, g.get_nrings())])
         < 1e-7
     )
