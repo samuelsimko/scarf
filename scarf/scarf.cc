@@ -323,6 +323,8 @@ a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const i
     auto ar=alm.unchecked<1>();
 
     sharp_alm2phase(&ar[0], phase_mav_a2p, *ginfo_new, *ainfo, 0, nthreads);
+    long unsigned int newshape[2] = {2*chunksize, unsigned(mmax+1)};
+    phase_a2p.resize(newshape);
     return phase_a2p;
 }
 
@@ -333,6 +335,9 @@ a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t 
 
   sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
 
+  long unsigned int newshape[3] = {1, phase_p2a.shape(0), phase_p2a.shape(1)};
+  long unsigned int oldshape[2] = {phase_p2a.shape(0), phase_p2a.shape(1)};
+  phase_p2a.resize(newshape);
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -343,6 +348,7 @@ a_c_c phase2alm_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase_p2a, size_t 
   auto phase_mav_p2a = to_mav<complex<double>, 3>(phase_p2a, true); // second param false or true ?
 
   sharp_phase2alm(&ar[0], phase_mav_p2a, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
+  phase_p2a.resize(oldshape);
   return alm;
 }
 
@@ -359,7 +365,8 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
     npix += ginfo->nph(i);
   }
 
-  if (phase.shape(0) != 1){
+  if (phase.ndim() > 2){
+
     int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
     a_c_c alm(vector<size_t>{2, size_t(n_alm)});
     auto ar = alm.mutable_unchecked<2>();
@@ -373,6 +380,10 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
     phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 2);
     return map;
   }
+
+  long unsigned int newshape[3] = {1, phase.shape(0), phase.shape(1)};
+  long unsigned int oldshape[2] = {phase.shape(0), phase.shape(1)};
+  phase.resize(newshape);
 
   int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
   a_c_c alm(n_alm);
@@ -388,6 +399,7 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
 
   phase_job job(SHARP_Y, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, 0, nthreads);
   phase_execute_phase2map(job, phase_mav, *ginfo_new, mmax, 0);
+  phase.resize(oldshape);
   return map;
 }
 
@@ -399,7 +411,7 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
 
-  if (map.ndim() != 1){
+  if (map.ndim() > 1){
     auto mr=map.mutable_unchecked<2>();
 
     int64_t n_alm = ((mmax + 1) * (mmax + 2)) / 2 + (mmax + 1) * (lmax - mmax);
@@ -441,6 +453,7 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
   auto phase_m2p = get_optional_Pyarr<complex<double>>(none_array, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
   auto phase_mav = to_mav<complex<double>, 3>(phase_m2p, true);
 
+
   py::buffer_info buf = phase_m2p.request();
   auto *ptr = static_cast<complex<double> *>(buf.ptr);
 
@@ -452,6 +465,8 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
   phase_job job(SHARP_Yt, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
   job.type = SHARP_MAP2ALM;
   phase_execute_map2phase(job, phase_mav, *ginfo_new, mmax, 0);
+  long unsigned int newshape[2] = {phase_m2p.shape(1), phase_m2p.shape(2)};
+  phase_m2p.resize(newshape);
   return phase_m2p;
 }
 
