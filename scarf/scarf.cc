@@ -283,7 +283,7 @@ py::array GL_xg(size_t n)
 /* phase functions */
 
 a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const int64_t lmax,
-      const int64_t mmax, const int nthreads, optional<a_d> zbounds, py::object &out){
+      const int64_t mmax, const int nthreads, optional<a_d> zbounds){
 
     a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
 
@@ -308,7 +308,8 @@ a_c_c alm2phase_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const i
         nchunks,chunksize);
 
     // auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {2*chunksize, unsigned(mmax)+1, 1});
-    auto phase_a2p = get_optional_Pyarr<complex<double>>(out, {1, 2*chunksize, unsigned(mmax)+1});
+    auto none_array = py::none();
+    auto phase_a2p = get_optional_Pyarr<complex<double>>(none_array, {1, 2*chunksize, unsigned(mmax)+1});
     auto phase_mav_a2p = to_mav<complex<double>, 3>(phase_a2p, true);
 
     py::buffer_info buf = phase_a2p.request();
@@ -390,8 +391,7 @@ a_d_c phase2map_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t lmax
   return map;
 }
 
-a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds,
-    py::object &out) {
+a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, size_t mmax, size_t nthreads, optional<a_d> zbounds) {
 
   a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
   sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
@@ -410,7 +410,8 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
     get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
         nchunks,chunksize);
 
-    auto phase_m2p = get_optional_Pyarr<complex<double>>(out, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
+    auto none_array = py::none();
+    auto phase_m2p = get_optional_Pyarr<complex<double>>(none_array, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
     auto phase_mav = to_mav<complex<double>, 3>(phase_m2p, true);
 
     py::buffer_info buf = phase_m2p.request();
@@ -436,7 +437,8 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
   get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
       nchunks,chunksize);
 
-  auto phase_m2p = get_optional_Pyarr<complex<double>>(out, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
+  auto none_array = py::none();
+  auto phase_m2p = get_optional_Pyarr<complex<double>>(none_array, {unsigned(map.ndim()), 2*chunksize, unsigned(mmax)+1});
   auto phase_mav = to_mav<complex<double>, 3>(phase_m2p, true);
 
   py::buffer_info buf = phase_m2p.request();
@@ -455,7 +457,7 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
 
 
 a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, const size_t spin, const int64_t lmax,
-     const int64_t mmax, const int nthreads, optional<a_d> zbounds, py::object &out){
+     const int64_t mmax, const int nthreads, optional<a_d> zbounds){
 
     a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
     sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
@@ -476,7 +478,8 @@ a_c_c alm2phase_spin_ginfo(sharp_standard_geom_info *ginfo, const a_c_c &alm, co
     get_singular_chunk_info(ginfo_new->npairs(), (0==0) ? 128 : 64, 
         nchunks,chunksize);
 
-    auto phase = get_optional_Pyarr<complex<double>>(out, {2, 2*chunksize, unsigned(mmax)+1});
+    auto none_array = py::none();
+    auto phase = get_optional_Pyarr<complex<double>>(none_array, {2, 2*chunksize, unsigned(mmax)+1});
     auto phase_mav = to_mav<complex<double>, 3>(phase, true);
 
     auto ar=alm.unchecked<2>();
@@ -492,7 +495,6 @@ a_c_c phase2alm_spin_ginfo(sharp_standard_geom_info *ginfo, a_c_c &phase, size_t
 
   a_d zb =  (zbounds.has_value()) ? zbounds.value() : a_d(py::cast(vector<double>({-1, 1})));
   sharp_standard_geom_info *ginfo_new = keep_rings_in_zbounds(*ginfo, zb);
-
 
   unique_ptr<sharp_alm_info> ainfo =
     set_triangular_alm_info (lmax, mmax);
@@ -813,12 +815,12 @@ PYBIND11_MODULE(scarf, m) {
     .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
     .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
     .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
-    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
-    .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
-    .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a)
-    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
-    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a, "out"_a=opt_zb)
-    .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a);
+    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
+    .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
+    .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
+    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
+    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
+    .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb);
 
 
   m.def("healpix_geometry", &sharp_make_healpix_geom_info, R"pbdoc(
