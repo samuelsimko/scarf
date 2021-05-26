@@ -19,8 +19,17 @@ Installation
 
    install
 
-Functions
----------
+Scarf tutorial
+--------------
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial
+
+
+Scarf Functions and Modules Reference
+-------------------------------------
 
 .. toctree::
    :maxdepth: 2

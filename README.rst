@@ -27,29 +27,32 @@ Scarf is a Spherical Harmonic Transform library designed for CMB lensing applica
 
 The repository uses `DUCC <https://github.com/mreineck/ducc>`_ for the calculations.
 
+Using binders to the DUCC source code, it provides functions that allow users
+to easily do transforms on portions of the sky or custom maps.
+
+Features
+--------
+
+- Custom creation of map geometries with user-specified parameters
+- Forward and backward SHTs with sky cut and arbitrary spin parameters
+  on custom or predefined geometries
+- Transforms from and to Legendre coefficients
+
 Installation
 ------------
-
-install all dependencies,
-
-.. code-block:: console
-   
-   $ pip install -r requirements.txt
-
-
-To install the package:
 
 .. code-block:: console
 
    $ git clone --recurse-submodules https://github.com/samuelsimko/scarf
+   $ pip install -r requirements.txt
    $ cd scarf
    $ pip install --user .
 
 
-Features
---------
-- Forward and backward SHTs with arbitrary spin and sky cut parameters
-- Custom creation of map geometries with user-specified parameters
+Documentation
+-------------
+
+Scarf's documentation can be found `here <https://scarfcmb.readthedocs.io/en/latest/>`.
 
 
 Minimal Working Example
@@ -109,8 +112,6 @@ or,
 
 For Developer
 -------------
-
-
 
 
 The Python binder creates and installs a new scarf package onto your machine by creating a shared resource (.so), thus,

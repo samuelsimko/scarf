@@ -660,23 +660,32 @@ PYBIND11_MODULE(scarf, m) {
   ----------
   nrings : int, scalar
     The number of rings
-  nph : int,  shape (:math:`N_{rings}`)
+  nph : int,  shape (nrings)
     TBD
-  ofs : int,  shape (:math:`N_{rings}`)
+  ofs : int,  shape (nrings)
     TBD
   stride : int, scalar
     The stride between two consecutive pixels on the map
-  phi0 : float, shape (:math:`N_{rings}`)
+  phi0 : float, shape (nrings)
     TBD
-  theta : float,  shape (:math:`N_{rings}`)
+  theta : float,  shape (nrings)
     The latitude angle of each ring
-  wgt : float,  shape (:math:`N_{rings}`)
+  wgt : float,  shape (nrings)
     The weighting for each ring
-  
-  Returns
-  -------
-  Geometry
-    A geometry as specified by the user
+    
+  Attributes
+  ----------
+  theta : float,  shape (nrings)
+    The latitude angle of each ring
+  nph : int,  shape (nrings)
+    TBD
+  ofs : int,  shape (nrings)
+    TBD
+  stride : int, scalar
+    The stride between two consecutive pixels on the map
+  phi0 : float, shape (nrings)
+    TBD
+  wgt : float,  shape (nrings)
   )pbdoc")
     .def(py::init(&GeometryInformation), "nrings"_a, "nph"_a, "ofs"_a, "stride"_a, "phi0"_a, "theta"_a, "wgt"_a )
     .def("get_nrings", &sharp_standard_geom_info::nrings, R"pbdoc(
@@ -804,23 +813,235 @@ PYBIND11_MODULE(scarf, m) {
     .def_readwrite("theta", &sharp_standard_geom_info::theta_array)
     .def_readwrite("phi0", &sharp_standard_geom_info::phi0_array)
     .def_readwrite("weight", &sharp_standard_geom_info::weight_array)
-    .def_readwrite("cth", &sharp_standard_geom_info::cth_array)
-    .def_readwrite("sth", &sharp_standard_geom_info::sth_array)
     .def_readwrite("nph", &sharp_standard_geom_info::nph_array)
     .def_readwrite("ofs", &sharp_standard_geom_info::ofs_array)
-    //.def("pair", &sharp_standard_geom_info::pair, "iring"_a)
-    //.def("get_ring", &sharp_standard_geom_info::get_ring, "weighted"_a, "iring"_a, "map"_a, "ringtmp"_a)
-    //.def("add_ring", &sharp_standard_geom_info::add_ring, "weighted"_a, "iring"_a, "ringtmp"_a, "map"_a)
-    .def("map2alm", &map2alm_ginfo, "map"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
-    .def("alm2map", &alm2map_ginfo, "alm"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
-    .def("map2alm_spin", &map2alm_spin_ginfo, "map"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
-    .def("alm2map_spin", &alm2map_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
-    .def("alm2phase", &alm2phase_ginfo, "alm"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
-    .def("phase2alm", &phase2alm_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
-    .def("phase2map", &phase2map_ginfo, "phase"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
-    .def("map2phase", &map2phase_ginfo, "map"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
-    .def("alm2phase_spin", &alm2phase_spin_ginfo, "alm"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb)
-    .def("phase2alm_spin", &phase2alm_spin_ginfo, "phase"_a, "spin"_a, "lmax"_a, "mmax"_a, "nthreads"_a, "zbounds"_a=opt_zb);
+    
+    .def("map2alm", &map2alm_ginfo, R"(
+    Computes a temperature map given the alm.
+
+    Parameters
+    ----------
+    alm : np.array, shape (:math:`N_{alm}`,)
+      The temperature alm
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be taken into account
+
+    Returns
+    -------
+    np.array, shape (:math:`N_{pix}`)
+      Temperature map
+    )","map"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("alm2map", &alm2map_ginfo, R"(
+    Computes the alm of a temperature map.
+
+    Parameters
+    ----------
+    map : np.array, shape (:math:`N_{pix}`,)
+      The temperature map
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (:math:`N_{alm}`)
+      Temperature map
+    )" "alm"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("map2alm_spin", &map2alm_spin_ginfo, R"(
+    Computes the alm of a polarization map.
+
+    Parameters
+    ----------
+    map : np.array, shape (2, :math:`N_{pix}`,)
+      The polarization map
+    spin : int, scalar
+      The spin of the field.
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be taken into account.
+
+    Returns
+    -------
+    np.array, shape (2, :math:`N_{alm}`)
+      Polarization alm
+    )", "map"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+    .def("alm2map_spin", &alm2map_spin_ginfo, R"(
+    Computes a polarization map given the alm.
+
+    Parameters
+    ----------
+    alm : np.array, shape (2, :math:`N_{alm}`,)
+      The polarization alm
+    spin : int, scalar
+      The spin of the field.
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (2, :math:`N_{pix}`)
+      Polarization map
+    )", "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("alm2phase", &alm2phase_ginfo, R"(
+    Computes a temperature phase given the alm.
+
+    Parameters
+    ----------
+    alm : np.array, shape (:math:`N_{alm}`)
+      The temperature alm
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (1, 2*npairs, mmax+1)
+      Polarization phase
+    )" "alm"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("phase2alm", &phase2alm_ginfo, R"(
+    Computes a temperature alm given the phase.
+
+    Parameters
+    ----------
+    phase : np.array, shape (1, 2*npairs, mmax+1)
+      The temperature phase
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (2, :math:`N_{alm}`)
+      Temperature alm
+    )", "phase"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("phase2map", &phase2map_ginfo, R"(
+    Computes a temperature map given the phase.
+
+    Parameters
+    ----------
+    phase : np.array, shape (1, 2*npairs, mmax+1)
+      The temperature phase
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (2, :math:`N_{pix}`)
+      Temperature map
+    )", "phase"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("map2phase", &map2phase_ginfo, R"(
+    Computes a temperature phase given the map.
+
+    Parameters
+    ----------
+    map : np.array, shape (:math:`N_{pix}`) or (2, :math: `N_{pix}`)
+      The temperature alm
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (1, 2*npairs, mmax+1)
+      Temperature phase
+    )", "map"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("alm2phase_spin", &alm2phase_spin_ginfo, R"(
+    Computes a polarization phase given the alm.
+
+    Parameters
+    ----------
+    alm : np.array, shape (2, :math:`N_{alm}`)
+      The polarization alm
+    spin : int, scalar
+      The spin of the field.
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (1, 2*npairs, mmax+1)
+      Polarization phase
+    )", "alm"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb)
+
+    .def("phase2alm_spin", &phase2alm_spin_ginfo, R"(
+    Computes a polarization alm given the phase.
+
+    Parameters
+    ----------
+    phase : np.array, shape (1, 2*npairs, mmax+1)
+      The polarization phase
+    spin : int, scalar
+      The spin of the field.
+    lmax: int, scalar
+      The maximum angular momentum quantum number (multipole) of the powerspectrum.
+    mmax: int, scalar
+      The maximum magnetic quantum number of the powerspectrum.
+    nthreads: int, scalar
+      The number of threads for the computation.
+    zbounds: List, shape (2), zbounds :math:`\in \{[-1,1]\}^2`
+      The latitudinal bounds. Only rings within zbounds will be calculated.
+
+    Returns
+    -------
+    np.array, shape (2, :math:`N_{alm}`)
+      Polarization alm
+    )", "phase"_a, "spin"_a, "lmax"_a, "mmax"_a=opt_int, "nthreads"_a=1, "zbounds"_a=opt_zb);
 
 
   m.def("healpix_geometry", &sharp_make_healpix_geom_info, R"pbdoc(
