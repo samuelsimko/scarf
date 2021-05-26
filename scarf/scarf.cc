@@ -465,7 +465,7 @@ a_c_c map2phase_ginfo(sharp_standard_geom_info *ginfo, a_d_c &map, size_t lmax, 
   phase_job job(SHARP_Yt, 0, {&ar[0]}, {&mr[0]}, phase_mav, *ginfo_new, *ainfo, SHARP_USE_WEIGHTS, nthreads);
   job.type = SHARP_MAP2ALM;
   phase_execute_map2phase(job, phase_mav, *ginfo_new, mmax, 0);
-  long unsigned int newshape[2] = {phase_m2p.shape(1), phase_m2p.shape(2)};
+  long unsigned int newshape[2] = {unsigned(phase_m2p.shape(1)), unsigned(phase_m2p.shape(2))};
   phase_m2p.resize(newshape);
   return phase_m2p;
 }
