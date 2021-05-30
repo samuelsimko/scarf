@@ -16,20 +16,20 @@ Scarf's alms and maps follow a similar convention to healpy's.
 Alm arrays
 ~~~~~~~~~~
 
-For spin-0 transforms, the alm array is assumed to be a one-dimentionnal array sorted by m from 0 to mmax, then l from 0 to lmax.
+For spin-0 transforms, the alm array is assumed to be a one-dimensional array sorted by l, then by m (:math:`a_{0,0}, a_{1, 0} \ldots a_{l_{max}, 0}, a_{0, 1} \ldots a_{l_{max}, m_{max}}`)
 As a result, users can use all `healpy.spht.Alm <https://healpy.readthedocs.io/en/latest/generated/healpy.sphtfunc.Alm.html>`_
 functions on their scarf-created alms.
 
-For higher spin transforms, the alm array is assumed to be a two-dimentionnal array of shape (2, hp.Alm.getsize(lmax, mmax)).
+For higher spin transforms, the alm array is assumed to be a two-dimensional array of shape (2, hp.Alm.getsize(lmax, mmax)).
 For spin-2 transforms, the first row would be the E alm array, and the second row would be the B alm array.
 
 Map arrays
 ~~~~~~~~~~
 
-For spin-0 transforms, the map array is assumed to be a one-dimentionnal array of length ``npix``, ``npix`` being the number of pixels
+For spin-0 transforms, the map array is assumed to be a one-dimensional array of length ``npix``, ``npix`` being the number of pixels
 of the map.
 
-For higher spin transforms, the map array is assumed to be a two-dimentionnal array of shape (2, npix).
+For higher spin transforms, the map array is assumed to be a two-dimensional array of shape (2, npix).
 For spin-2 functions, the first row would be the Q map, and the second row would be the U map.
 
 
@@ -63,18 +63,18 @@ Here is a minimal working example:
        zbounds=[0, 1]
    )
 
-The arguments of the functions are similar to healpy's transforms with two notable additions:
+The arguments of the functions are similar to healpy's with two notable additions:
 
 - The ``nthreads`` parameter allow the user to specify the number of threads to use for the calculation (default = 1);
 - The ``zbounds`` parameter allow the user to specify which portion of the map should be taken into account by the transform.
   Only rings whose latitude :math:`\theta` is in the interval ``zbounds`` = :math:`[\cos(\theta_1), \cos(\theta_2)]` are taken into account. 
-
+   Setting ``zbounds = [0,1]`` thus restricts ``map2alm()`` to the northern hemisphere.
 
 
 Transforms on custom geometries
 -------------------------------
 
-A scarf geometry is the specification of a map pixelisation scheme.
+A scarf geometry is the specification of a map pixelization scheme.
 
 Some examples are the HEALPix geometry,
 the Gauss-Legendre (GL) geometry, or the equiangular geometry.
@@ -139,7 +139,7 @@ If we define the spherical harmonics as
 
    Y_{l m}(\theta, \phi) := P_{lm}(\cos \theta) e^{i m\phi}
 
-with :math:`P_{lm}` being the associated legendre polynomial, we can define a phase array:
+with :math:`P_{lm}` being the associated Legendre polynomial, we can define a phase array:
 
 .. math::
 
@@ -164,6 +164,7 @@ the phase values, and return them as an array.
        mmax=lmax
    )
 
+
 .. graphviz::
 
    digraph foo {
@@ -180,3 +181,9 @@ the phase values, and return them as an array.
       p -> a [label="phase2alm"];
       p -> m [label="phase2map"];
    }
+
+.. note::
+   For forward and backward transforms, DUCC's original phase arrays work differently.
+   We've found the content of the phase between the two transforms differ by nph*weight
+   for each ring. Scarf normalizes the output of the phase functions by dividing the phase obtained
+   from map2phase and phase2alm by nph*weight.

@@ -5,6 +5,8 @@
 Spherical Harmonics Transforms
 ==============================
 
+Click on the name of a function to get more information.
+
 .. autosummary::
    :toctree: generated/
 

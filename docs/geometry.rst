@@ -8,7 +8,6 @@ Geometry
 
    Geometry
 
-
 ``scarf`` allows users to create their own map geometry, which allows for 
 transforms on custom pixelations.
 
@@ -58,9 +57,14 @@ You can also create HEALPix geometries directly:
 
    healpix_geom = scarf.healpix_geometry(nside=1, 1)
 
-The ``Geometry`` class has methods to a variety of SHT transforms
+The ``Geometry`` class has methods to a variety of SHT transforms.
 
 .. code-block:: python
 
    alm = geom.map2alm(map, lmax=2, mmax=1, nthreads=12, zbounds = [-1, 0])
 
+Attributes can be directly modified.
+
+.. code-block:: python
+
+   geom.theta[2] = np.pi/3

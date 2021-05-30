@@ -37,6 +37,22 @@ Scarf Functions and Modules Reference
    geometry
    sht
 
+Informations for developers
+-------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   developers
+
+About Scarf
+-------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   about
+
 Indices and tables
 ==================
 
