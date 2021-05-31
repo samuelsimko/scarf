@@ -36,7 +36,7 @@ Features
 - Custom creation of map geometries with user-specified parameters
 - Forward and backward SHTs with sky cut and arbitrary spin parameters
   on custom or predefined geometries
-- Transforms from and to Legendre coefficients
+- Transforms from and to Legendre coefficients (phase)
 
 Installation
 ------------
@@ -52,76 +52,4 @@ Installation
 Documentation
 -------------
 
-Scarf's documentation can be found `here <https://scarfcmb.readthedocs.io/en/latest/>`.
-
-
-Minimal Working Example
------------------------
-
-Import ``scarf`` (and ``numpy``, for the following example). It provides almost all spherical harmonic transforms
-like healpy and follows a similar naming convention.
-
-For instance, to calculate the alm from a given map, call the ``map2alm()`` function,
-
-.. code-block:: python
-
-   import scarf
-   import numpy as np
-   nside_mwe = 1
-   npix_mwe = 12 * nside_mwe ** 2
-   map_mwe = np.random.random(npix_mwe)
-   lmax_mwe = 2
-   
-   scarf_alm = scarf.map2alm(
-       map = map_mwe,
-       nside = nside_mwe,
-       lmax = lmax_mwe,
-       mmax = lmax_mwe,
-       nthreads = 1,
-       zbounds = [0, 1])
-
-
-``zbounds`` is the parameter controlling the latitude of the rings which are transformed.
-``zbound = cos(latitude)``, where latitude goes from Pi to 0 radian.
-Setting ``zbounds = [0,1]`` thus restricts ``map2alm()`` to the northern hemisphere.
-
-
-Testing
---------
-
-A basic pytest is currently executed upon each pull-request and push, for each branch.
-To manually test the code with the existing test directory **tests**, install ``pytest``,
-
-.. code-block:: console
-
-   $ pip install -U pytest
-
-and execute in the root directory of the repository,
-
-.. code-block:: console
-
-   $ pytest tests
-
-or,
-
-.. code-block:: console
-
-   $ python3 -m pytest tests
-
-
-
-For Developer
--------------
-
-
-The Python binder creates and installs a new scarf package onto your machine by creating a shared resource (.so), thus,
-
-.. code-block:: console
-
-   pip install --user --editable .
-
-won't apply changes directly to the scarf package, as one needs to update the .so file.
-To do so,
-
-   * Save any changes you have made to the code,
-   * ``pip install --user .``
+Scarf's documentation can be found `here <https://scarfcmb.readthedocs.io/en/latest/>`_.
