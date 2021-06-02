@@ -44,12 +44,12 @@ namespace detail_sharp {
 
 using std::complex;
 
-static size_t new_nchunks_max = 1;
+// static size_t new_nchunks_max = 1;
 
 /// Get the chunk information needed to compute the whole map in one chunk
 static void get_singular_chunk_info(size_t ndata, size_t nmult, size_t &nchunks,
                                     size_t &chunksize, size_t spin = 1) {
-  size_t chunksize_min = 10;
+  // size_t chunksize_min = 10;
   chunksize = ndata;
   nchunks = 1;
   /*
