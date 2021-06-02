@@ -4,7 +4,7 @@
  *    Created 2021 by Samuel Simko.
  *    Based on the DUCC source code by Martin Reinecke.
  *
- * This file is subject to the terms and conditions of the MIT License.
+ * This file is subject to the terms and conditions of the GNU General Public License.
  */
 
 #include "docstrings.h"
@@ -18,7 +18,12 @@ namespace py = pybind11;
 optional<long int> opt_int;
 optional<a_d> opt_zb;
 
+
 using namespace pybind11;
+
+int foo(int i, int j){
+  return i + j*2;
+}
 
 PYBIND11_MODULE(scarf, m) {
 
@@ -92,4 +97,6 @@ PYBIND11_MODULE(scarf, m) {
 
   m.def("gauss_geometry", &gauss_geometry, gauss_geometry_ds, "nside"_a,
         "stride"_a);
+  m.def("foo", &foo, "this function is a test", "i"_a,
+        "j"_a=1);
 }

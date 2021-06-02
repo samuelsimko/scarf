@@ -4,7 +4,7 @@
  *    Created 2021 by Samuel Simko.
  *    Based on the DUCC source code by Martin Reinecke.
  *
- * This file is subject to the terms and conditions of the MIT License.
+ * This file is subject to the terms and conditions of the GNU General Public License.
  */
 
 #include "phase.h"
