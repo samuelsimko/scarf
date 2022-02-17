@@ -1,5 +1,5 @@
-.. image:: _static/scarflogo.jpg
-   :target: _static/scarflogo.jpg
+.. image:: scarflogo.jpg
+   :target: scarflogo.jpg
    :alt: Scarf logo
 
 
