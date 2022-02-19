@@ -1,5 +1,5 @@
-.. image:: scarflogo.PNG
-   :target: scarflogo.PNG
+.. image:: Scarf-logo.PNG
+   :target: Scarf-logo.PNG
    :alt: Scarf logo
 
 
